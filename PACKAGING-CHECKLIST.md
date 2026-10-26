@@ -1,12 +1,12 @@
-# Game Packaging and Release Checklist
+# Cross-Platform Packaging and Release Checklist
 
-This is a release gate for games that follow `DESIGN.md`. Mark unsupported targets as **N/A with a reason**; do not treat every listed format as mandatory.
+This is a release and deployment gate for projects following `DESIGN.md`. The baseline target ambition is Windows x86/x86-64, Android 5.0+ (API 21+), desktop Linux, WebAssembly, and R36S/PortMaster where the project and dependencies support them. Declare the actual support matrix; mark unsupported targets as **N/A with a reason** rather than claiming universal support.
 
 ## 1. Project contract
 
-- [ ] Supported platforms, architectures, input methods, and graphics backends are documented.
+- [ ] Supported platforms, architectures, minimum OS/API levels, runtime requirements, and platform-specific features are documented.
 - [ ] Build, test, install, run, and package commands are documented and work from a clean checkout.
-- [ ] Top-level `VERSION` is the only manually maintained version source (`VERSION-HANDLING.md`).
+- [ ] Top-level `VERSION` is the only manually maintained version source where the project uses this convention (`VERSION-HANDLING.md`).
 - [ ] Required runtime assets and dynamic libraries are documented.
 - [ ] License, third-party notices, and asset licensing are included in the release process.
 
@@ -69,34 +69,40 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Bundled libraries do not override platform libraries accidentally; launcher environment is intentional.
 - [ ] Artifact format, architecture, and runtime dependencies are checked even when the target cannot run in CI.
 - [ ] PortMaster/handheld launcher path variables and the final-vs-base-directory convention are documented.
+- [ ] dArkOS/ArkOS compatibility is recorded from actual PortMaster/runtime testing, not inferred from the device name alone.
+- [ ] WebAssembly builds use Asyncify only when required; JSPI/browser requirements and persistent-storage behavior are documented if used.
+- [ ] Android minimum API is explicit (API 21 for Android 5.0); older-API compatibility is not inferred solely from successful compilation.
 
 ## 7. Nix-first CI
 
-- [ ] The flake defines the authoritative build, test, lint, package, and cross-build logic.
+- [ ] The flake defines authoritative build, test, lint, package, cross-build, artifact-assembly, and deployment logic where applicable.
 - [ ] The documented CI flake output actually builds/runs all required checks and required package outputs; `nix flake check` alone does not automatically build every `packages` output.
-- [ ] GitHub Actions only provisions Nix, selects the documented flake output, configures optional caching, and handles artifact upload/release credentials.
+- [ ] GitHub Actions only provisions Nix, selects the documented aggregate flake output, configures optional caching, and uploads/publishes already-built artifacts using external credentials.
+- [ ] One documented command builds all required artifacts/checks for the project profile; another deploys when applicable.
 - [ ] Local commands reproduce CI checks without needing logic hidden in workflow YAML.
+- [ ] Required target outputs are dependencies of the release aggregate; `nix flake check` alone is not assumed to build all `packages` outputs.
 - [ ] Cross-target executables are run only on compatible runners/emulators; otherwise artifact validation and manual checks are recorded.
+- [ ] Deployment consumes the exact flake-built output and does not duplicate build steps in CI YAML; credentials remain outside the flake.
 
-## 8. Mods and add-ons
+## 8. Extensions and user-installed content
 
 - [ ] Shipped assets, user add-ons, configuration, cache, and temporary downloads are kept distinct.
 - [ ] Add-on discovery and load order are deterministic and documented.
-- [ ] Manifests validate IDs, versions, game/API compatibility, and dependencies.
+- [ ] Manifests validate IDs, versions, application/API compatibility, and dependencies.
 - [ ] Duplicate IDs, missing dependencies, malformed packages, and load failures produce useful diagnostics.
 - [ ] Archive extraction prevents path traversal and installs from a validated staging directory.
 - [ ] Third-party code is not executed by default; any executable-mod trust model is documented.
-- [ ] A safe mode can start without third-party add-ons where add-ons are supported.
+- [ ] A safe mode can start without third-party extensions where extensions are supported.
 
-## 9. Options and recovery
+## 9. User settings and recovery
 
 - [ ] Defaults, saved settings, and command-line override precedence are documented and tested.
 - [ ] CLI overrides do not rewrite saved preferences just by launching the game.
-- [ ] Unsupported graphics settings cannot be selected as if they were active.
+- [ ] Unsupported settings cannot be selected as if they were active; interactive applications should provide a recovery path for settings that prevent startup.
 - [ ] Failed renderer/display changes recover to a usable state or have a documented reset procedure.
 - [ ] Reset-to-defaults does not delete saves, scores, or other unrelated user data.
-- [ ] Keyboard and controller navigation cover essential menus on supported targets.
-- [ ] Controller disconnect/reconnect and rebind cancellation do not leave input stuck or corrupt bindings.
+- [ ] For interactive applications, keyboard/controller navigation covers essential UI paths on supported targets.
+- [ ] Input-device disconnect/reconnect and rebinding cancellation do not leave input stuck or corrupt bindings, where those features apply.
 
 ## 10. Release artifact hygiene
 

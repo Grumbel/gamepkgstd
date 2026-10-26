@@ -1,17 +1,16 @@
-# Game Packaging Design Notes
+# Cross-Platform Packaging Design Notes
 
-Condensed design document describing shared packaging, path handling,
-input conventions, CLI, menus, versioning and build patterns used across
-Pingus, Kurvenrausch, dualthrust, KugelMatch and SuperTux.
+Reusable rules for packaging, paths, CLI, configuration, cross-compilation, extensions, versioning, and deployment across applications, games, libraries, command-line tools, and web projects. The initial examples came from several games, but the core contract is generic.
 
 ## Contents
 
 | File | Purpose |
 |------|---------|
-| **DESIGN.md** | Main design document (paths, shortcuts, gamepad, CLI, menus, add-ons, packaging, CI) |
+| **DESIGN.md** | Generic build, path, CLI, configuration, extension, packaging, and Nix-first CI contract |
 | **VERSION-HANDLING.md** | Rules for the top-level `VERSION` file, CMake and Nix |
 | **NIX-DEVELOP-SHELL.md** | Reusable `nix develop` out-of-tree CMake pattern |
-| **PACKAGING-CHECKLIST.md** | Release gate for native/cross builds, runtime smoke tests, add-ons, CI, and target packages |
+| **PACKAGING-CHECKLIST.md** | Release and deployment gate for native/cross builds, runtime smoke tests, extensions, CI, and target artifacts |
+| **GAME-DESIGN.md** | Optional game-specific shortcuts, controller, menu, and graphics guidance |
 | **AGENTS.md** | Session continuity, git-bundle delivery rules for agents |
 
 ## Source projects
@@ -25,4 +24,4 @@ Pingus, Kurvenrausch, dualthrust, KugelMatch and SuperTux.
 
 ## How to use these notes
 
-Treat `DESIGN.md` as the shared behavior and engineering contract. The Nix flake is the source of truth for build and CI logic; GitHub Actions is only a thin Nix invocation shim. Use `PACKAGING-CHECKLIST.md` as a release gate and mark genuinely unsupported targets as N/A with a reason. Project-specific deviations should be documented rather than hidden in build scripts or workflow YAML.
+Treat `DESIGN.md` as the generic engineering contract and `GAME-DESIGN.md` as optional game-specific guidance. `flake.nix` is the single source of truth for builds, tests, cross-compilation, packaging, and deployment; GitHub Actions is only a thin invocation shim. The default goal is a documented one-command build for every required artifact, plus a deployment command where applicable. Use `PACKAGING-CHECKLIST.md` as a release gate and mark unsupported targets N/A with a reason. Project-specific deviations should be documented rather than hidden in build scripts or workflow YAML.

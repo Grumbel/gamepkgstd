@@ -34,3 +34,13 @@ Deliver changes as a cumulative git bundle rooted at the original base commit, f
 - Added add-on discovery, manifest, trust, dependency, extraction-safety, and recovery requirements.
 - Made `flake.nix` the single source of truth for CI build/test/package logic and reduced GitHub Actions to a thin shim.
 - Reviewed wording for overgeneralized platform assumptions and added path/add-on/CI checklist items.
+
+
+## Generic software portability revision
+
+- Generalized the main contract from game packaging to applications, libraries, CLI tools, and websites.
+- Moved keyboard shortcuts, gamepad behavior, game menu structure, and game-specific graphics/input guidance into `GAME-DESIGN.md`.
+- Made the intended one-command Nix flake build/test/package/deploy interface explicit; GitHub Actions is a thin shim.
+- Documented Windows x86/x86-64, Android API 21+, Linux, WebAssembly, and R36S/PortMaster target profiles, including Asyncify/JSPI and the distinction between R36S hardware, firmware, and PortMaster.
+- Checked current public Emscripten, Android NDK, and PortMaster documentation for the target-specific notes.
+- Remaining: validate each reference project flake and test real artifacts on target runtimes. No target binaries were built in this documentation-only revision.
