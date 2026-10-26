@@ -1,113 +1,184 @@
-# Cross-Platform Packaging and Release Checklist
+# Cross-Platform Project Compliance Checklist
 
-This is a release and deployment gate for projects following `DESIGN.md`. The baseline target ambition is Windows x86/x86-64, Android 5.0+ (API 21+), desktop Linux, WebAssembly, and R36S/PortMaster where the project and dependencies support them. Declare the actual support matrix; mark unsupported targets as **N/A with a reason** rather than claiming universal support.
+Use this checklist as a release gate for projects following [`DESIGN.md`](DESIGN.md). It applies to games and other distributable software. For each item record **Pass**, **Fail**, or **N/A with a reason**. Do not mark an item passed merely because a build succeeds: record the command, target, and evidence for checks that matter. Platform-specific sections apply only to declared targets. Game-specific UX checks live in [`GAME-DESIGN.md`](GAME-DESIGN.md).
 
-## 1. Project contract
+## 1. Project contract and support matrix
 
-- [ ] Supported platforms, architectures, minimum OS/API levels, runtime requirements, and platform-specific features are documented.
-- [ ] Build, test, install, run, and package commands are documented and work from a clean checkout.
-- [ ] Top-level `VERSION` is the only manually maintained version source where the project uses this convention (`VERSION-HANDLING.md`).
-- [ ] Required runtime assets and dynamic libraries are documented.
-- [ ] License, third-party notices, and asset licensing are included in the release process.
+- [ ] Project purpose, supported features, platforms, architectures, minimum OS/API versions, and known limitations are documented.
+- [ ] Every required target has a declared artifact format, runtime requirements, and validation method.
+- [ ] Build, test, package, run, deploy, and clean commands are documented and work from a clean checkout.
+- [ ] Version source, release numbering, license, third-party notices, and asset licensing are defined.
+- [ ] Required and optional dependencies/features are explicit; accidental host discovery cannot silently change the product.
 
-## 2. Build and cross-build
+## 2. One-command Nix workflow
 
-- [ ] Native clean build succeeds.
-- [ ] Cross-build uses an explicit target toolchain/sysroot and target dependencies.
-- [ ] Host tools and target binaries are kept distinct; build-time generators run on the build host.
-- [ ] Build directories are separate for each compiler, target, and materially different configuration.
-- [ ] Target-only executables are not accidentally run during cross-configuration.
-- [ ] Optional dependencies/features are deliberate, not selected by accidental host discovery.
-- [ ] Tests run where supported; unavailable target tests are listed as manual checks, not marked passing.
-- [ ] Release metadata records source revision, version, target, options, and output artifacts.
+- [ ] `flake.nix` is the authoritative definition for development tools, builds, tests, cross-compilation, packaging, and deployment.
+- [ ] The documented top-level command builds all required release artifacts, or a single documented aggregate output does so.
+- [ ] Each supported target has an explicit, discoverable flake output and target-specific dependencies/options.
+- [ ] A clean checkout can build required outputs without relying on undeclared files, local state, or network access during the build.
+- [ ] GitHub Actions and other CI providers are thin shims: install/setup Nix, select flake outputs, configure cache access, and upload/publish results. Build logic is not duplicated in workflow YAML.
+- [ ] Deployment is invoked through the flake-defined workflow; credentials are injected at deployment time and are not embedded in derivations or artifacts.
+- [ ] Build outputs and checks are distinguished: CI explicitly builds every required package rather than assuming `nix flake check` builds all `packages` outputs.
+- [ ] Build and deployment steps fail clearly on errors; a failed build cannot publish stale artifacts as if they were current.
 
-## 3. Install-tree/runtime smoke test
+## 3. Native builds and cross-compilation
+
+- [ ] Native clean build and applicable tests succeed.
+- [ ] Cross-builds use explicit target systems, toolchains/sysroots, and target dependencies.
+- [ ] Build-host tools and target binaries are separated; generators run on the build host unless a documented emulator is used.
+- [ ] Build directories and caches are isolated by target, compiler, and materially different configuration.
+- [ ] Cross-configuration does not accidentally execute target binaries or discover host libraries as target dependencies.
+- [ ] Target architecture, ABI, minimum OS/API, linkage, and runtime dependencies are checked in the produced artifact.
+- [ ] Tests that cannot run on the build host are marked as requiring emulation, a device, or manual validation, not falsely reported as passed.
+- [ ] Release metadata records source revision, version, target, configuration, and artifact names.
+
+## 4. Target coverage and deployment
+
+For every target marked supported in the support matrix:
+
+- [ ] The required artifact is produced by the documented flake command from a clean checkout.
+- [ ] Artifact architecture, format, minimum runtime, dependencies, and required assets are checked automatically where possible.
+- [ ] The artifact is deployed or installed using a documented, repeatable command.
+- [ ] The exact artifact intended for release receives a smoke test; testing a different build is not sufficient.
+- [ ] A target-specific test is automated where practical; remaining manual/device checks are listed explicitly.
+- [ ] Unsupported combinations fail clearly rather than silently producing a host-native artifact.
+
+### Windows
+
+- [ ] Win32 and/or x86-64 support is explicitly declared; each declared architecture is cross-built.
+- [ ] Required DLLs/runtime components are bundled or their installation requirements are documented.
+- [ ] Paths work from directories containing spaces and non-ASCII characters.
+- [ ] The package runs without the build environment, developer PATH, or source tree.
+
+### Android
+
+- [ ] Minimum Android API level and supported ABIs are explicit; API 21 / Android 5.0 is the baseline only when claimed by the project.
+- [ ] Manifest, package metadata, permissions, native libraries, assets, and signing are handled by the documented release workflow.
+- [ ] Storage follows Android's sandbox and scoped-storage model; pause/resume, activity recreation, and process death do not corrupt persistent data.
+- [ ] VR applications declare their separate device/API requirements instead of inheriting the ordinary Android baseline.
+
+### WebAssembly
+
+- [ ] Browser/runtime requirements, memory limits, asset delivery, and persistence behavior are documented.
+- [ ] Asyncify or an alternative async integration is selected intentionally; it is not enabled without a demonstrated need or omitted when synchronous assumptions require it.
+- [ ] Startup, loading progress, errors, input focus, resize, and browser visibility changes are handled.
+- [ ] Persistent data is committed using the chosen browser storage mechanism; the user is not told data is saved before the commit succeeds.
+- [ ] Hosting paths, MIME types, compression, cache policy, and deployment destination are tested.
+
+### Linux desktop
+
+- [ ] Installed assets and executables use a documented prefix-relative layout; runtime dependencies are resolvable on the intended distribution/runtime.
+- [ ] XDG directories, desktop entry, icons, and optional AppStream/man-page metadata are correct where provided.
+- [ ] `nix build` and `nix run` work if exposed as project interfaces.
+- [ ] Sandboxed package permissions are limited to required access when a sandboxed format is offered.
+
+### R36S / PortMaster / ArkOS / dArkOS and similar handhelds
+
+- [ ] Supported device/firmware combinations and CPU architecture/ABI are documented and verified; names alone are not treated as proof of compatibility.
+- [ ] The launcher contract, working directory, environment variables, runtime libraries, controls, display mode, and save location are documented.
+- [ ] Bundled libraries do not accidentally override incompatible system libraries; loader paths and environment changes are intentional.
+- [ ] The package installs, launches, exits, saves, and resumes correctly on the declared target hardware or a documented equivalent test setup.
+
+## 5. Installed artifact and runtime behavior
 
 Run the installed artifact from a working directory outside the source and build trees.
 
-- [ ] The game finds assets without access to the source tree.
-- [ ] Runtime libraries and plugins resolve on a clean target environment.
-- [ ] `--help` and `--version` work without starting graphics/audio.
-- [ ] Invalid CLI options fail with a useful message and non-zero status.
-- [ ] Asset, user-data, config, state, cache, temp, and runtime paths resolve according to the target platform.
-- [ ] Path overrides use consistent hyphenated names and affect only their own category.
-- [ ] XDG base variables are validated as absolute paths; native Windows and portable/handheld layouts are tested separately.
-- [ ] Portable mode has an explicit activation mechanism and handles read-only/full storage without silently switching profiles.
-- [ ] Missing/unwritable user directories produce a useful diagnostic.
-- [ ] No writes go into the install prefix or current working directory by default.
-- [ ] `--no-save` (if supported) prevents all persistent gameplay writes.
-- [ ] A missing or malformed config does not destroy saves or silently overwrite the original config.
-- [ ] A clean install can start with no pre-existing user configuration.
-- [ ] Temporary files are safely created and cleaned up; durable files are never stored only in temp directories.
+- [ ] The program starts from a clean install with no pre-existing user configuration.
+- [ ] Required assets and runtime libraries resolve without access to the source tree or build environment.
+- [ ] `--help` and `--version` work without unnecessarily initializing graphics, audio, network, or other expensive subsystems.
+- [ ] Invalid CLI arguments fail with a useful diagnostic and non-zero exit status.
+- [ ] No writes go to the install prefix or current working directory by default unless that behavior is explicitly intended.
+- [ ] Missing, unwritable, or malformed user directories/configuration produce useful errors and do not destroy unrelated data.
+- [ ] Shutdown and interrupted writes do not leave persistent data corrupt; atomic writes use staging on the destination filesystem.
+- [ ] Startup, shutdown, and long-running operations remain responsive or report progress; failures are visible and actionable.
 
-## 4. Linux desktop package
+## 6. Paths, configuration, and CLI
 
-- [ ] Executable and assets are installed to a documented prefix-relative layout.
-- [ ] Desktop entry uses a valid executable name, icon reference, and launch arguments.
-- [ ] Icon files are installed at the expected sizes/locations.
-- [ ] AppStream metainfo is valid if supplied.
-- [ ] Man page is included if the project maintains one.
-- [ ] `nix build` and `nix run` work if Nix packaging is supported.
-- [ ] Flatpak permissions and filesystem access are limited to what the game needs if Flatpak is supported.
+- [ ] Installed assets, user data, configuration, persistent state, cache, temporary files, and runtime files have distinct documented purposes.
+- [ ] CLI path options use the consistent vocabulary in `DESIGN.md`; deprecated aliases, if retained, are tested and documented.
+- [ ] Linux desktop paths follow XDG base-directory rules; Windows uses appropriate known folders; Android and web use their platform storage models.
+- [ ] Portable mode has explicit detection/activation rules, keeps writable files in its documented location, and does not silently fall back to writing elsewhere.
+- [ ] Handheld launchers' supplied paths and environment variables are respected.
+- [ ] Relative-path resolution is deterministic and documented; it does not accidentally depend on the caller's working directory.
+- [ ] Configuration precedence is documented and tested; command-line overrides do not silently rewrite saved preferences.
+- [ ] Config migration is versioned and tested; unknown or invalid values have a defined handling policy.
+- [ ] Reset options clearly state their scope and do not remove saves or unrelated user data.
+- [ ] `--no-save`, if provided, disables all persistent gameplay/state writes covered by its documented meaning.
 
-## 5. Windows package
+## 7. Data safety, updates, and recovery
 
-- [ ] Architecture and minimum supported Windows version are documented.
-- [ ] Required runtime DLLs are bundled or their installation requirements are explicit.
-- [ ] Asset paths work when installed under a directory containing spaces or non-ASCII characters.
-- [ ] The package runs without the build environment or developer PATH.
-- [ ] The archive/installer contains license and third-party notices.
-- [ ] A clean Windows smoke test is performed for each supported architecture when possible.
+- [ ] User data is kept separate from installed program files and replaceable cache data.
+- [ ] Saves/state have a versioning and migration strategy; updates do not silently overwrite data that cannot be read.
+- [ ] Interrupted saves, full disks, permission failures, and invalid/corrupt files are handled without avoidable data loss.
+- [ ] Uninstall/update behavior for user data is documented; uninstall does not unexpectedly delete user-created content.
+- [ ] A broken configuration or graphics setting can be reset without requiring the normal UI to start.
+- [ ] Destructive actions are clearly identified and confirmed when data loss would be meaningful.
+- [ ] Backward/forward compatibility limits are documented; downgrade behavior is tested or explicitly unsupported.
 
-## 6. Web / Android / handheld targets (when supported)
+## 8. Extensions, mods, plugins, and add-ons
 
-- [ ] Writable storage and asset access use the platform's actual storage model.
-- [ ] Persistence flush/commit behavior is tested where storage is virtual or asynchronous.
-- [ ] Input prompts, focus, pause/resume, and quit behavior fit the platform.
-- [ ] No desktop-only assumptions are required for startup or configuration.
-- [ ] Handheld launcher, environment variables, save location, and control mapping are documented.
-- [ ] Bundled libraries do not override platform libraries accidentally; launcher environment is intentional.
-- [ ] Artifact format, architecture, and runtime dependencies are checked even when the target cannot run in CI.
-- [ ] PortMaster/handheld launcher path variables and the final-vs-base-directory convention are documented.
-- [ ] dArkOS/ArkOS compatibility is recorded from actual PortMaster/runtime testing, not inferred from the device name alone.
-- [ ] WebAssembly builds use Asyncify only when required; JSPI/browser requirements and persistent-storage behavior are documented if used.
-- [ ] Android minimum API is explicit (API 21 for Android 5.0); older-API compatibility is not inferred solely from successful compilation.
+- [ ] The project documents whether extensions are supported, which types are allowed, and where they are discovered and installed.
+- [ ] Each supported extension type has a stable identifier and a documented metadata/version format.
+- [ ] Discovery and load order are deterministic; duplicate IDs and missing/incompatible dependencies produce useful diagnostics.
+- [ ] Compatibility with the host application/API and extension dependencies is checked before activation where possible.
+- [ ] Archive extraction rejects path traversal, unsafe links, and writes outside the intended destination.
+- [ ] Downloaded executable code is not silently run; trust and security implications are communicated.
+- [ ] Extension settings and user content are stored separately from global preferences and shipped assets.
+- [ ] An extension can be disabled or removed without damaging unrelated data; startup recovery can bypass extensions if they prevent launch.
+- [ ] Updates that remove or change extension content handle dependent saves/projects explicitly.
 
-## 7. Nix-first CI
+## 9. UI, accessibility, and interaction (all applicable applications)
 
-- [ ] The flake defines authoritative build, test, lint, package, cross-build, artifact-assembly, and deployment logic where applicable.
-- [ ] The documented CI flake output actually builds/runs all required checks and required package outputs; `nix flake check` alone does not automatically build every `packages` output.
-- [ ] GitHub Actions only provisions Nix, selects the documented aggregate flake output, configures optional caching, and uploads/publishes already-built artifacts using external credentials.
-- [ ] One documented command builds all required artifacts/checks for the project profile; another deploys when applicable.
-- [ ] Local commands reproduce CI checks without needing logic hidden in workflow YAML.
-- [ ] Required target outputs are dependencies of the release aggregate; `nix flake check` alone is not assumed to build all `packages` outputs.
-- [ ] Cross-target executables are run only on compatible runners/emulators; otherwise artifact validation and manual checks are recorded.
-- [ ] Deployment consumes the exact flake-built output and does not duplicate build steps in CI YAML; credentials remain outside the flake.
+- [ ] Essential operations are discoverable and reachable using every input method the project claims to support.
+- [ ] Focus, keyboard navigation, shortcuts, text entry, dialogs, and cancellation behave consistently.
+- [ ] UI text remains legible at supported sizes, scaling levels, resolutions, and display configurations.
+- [ ] Color is not the sole way important status or errors are communicated.
+- [ ] Error messages explain what failed and offer a useful next step where possible.
+- [ ] Long operations expose progress or a responsive cancel/stop path when practical.
+- [ ] Destructive or irreversible actions are clearly named and are not triggered by ambiguous controls.
+- [ ] Accessibility features are documented and tested against the relevant project scope; applicable items from the Xbox Accessibility Guidelines or equivalent guidance are reviewed.
 
-## 8. Extensions and user-installed content
+## 10. Game-specific behavior (if applicable)
 
-- [ ] Shipped assets, user add-ons, configuration, cache, and temporary downloads are kept distinct.
-- [ ] Add-on discovery and load order are deterministic and documented.
-- [ ] Manifests validate IDs, versions, application/API compatibility, and dependencies.
-- [ ] Duplicate IDs, missing dependencies, malformed packages, and load failures produce useful diagnostics.
-- [ ] Archive extraction prevents path traversal and installs from a validated staging directory.
-- [ ] Third-party code is not executed by default; any executable-mod trust model is documented.
-- [ ] A safe mode can start without third-party extensions where extensions are supported.
+Use [`GAME-DESIGN.md`](GAME-DESIGN.md) for the detailed checklist.
 
-## 9. User settings and recovery
+- [ ] The game is playable using its declared primary input method, including menus and recovery flows.
+- [ ] Settings reflect the mode actually applied; unsupported graphics modes cannot appear active.
+- [ ] Renderer/display changes recover from failure or provide a documented safe reset path.
+- [ ] Controller disconnect/reconnect and rebinding cancellation do not leave input stuck or lose previous bindings.
+- [ ] Pause, quit, abort, restart, and destructive save/progression actions are distinct and behave predictably.
+- [ ] Audio/visual cues, subtitles, remapping, text size, contrast, motion and photosensitivity options are reviewed for relevance to the game.
 
-- [ ] Defaults, saved settings, and command-line override precedence are documented and tested.
-- [ ] CLI overrides do not rewrite saved preferences just by launching the game.
-- [ ] Unsupported settings cannot be selected as if they were active; interactive applications should provide a recovery path for settings that prevent startup.
-- [ ] Failed renderer/display changes recover to a usable state or have a documented reset procedure.
-- [ ] Reset-to-defaults does not delete saves, scores, or other unrelated user data.
-- [ ] For interactive applications, keyboard/controller navigation covers essential UI paths on supported targets.
-- [ ] Input-device disconnect/reconnect and rebinding cancellation do not leave input stuck or corrupt bindings, where those features apply.
+## 11. Console-style quality and lifecycle checks
 
-## 10. Release artifact hygiene
+These are platform-independent quality checks inspired by public console certification requirements, not a claim of certification and not a substitute for the current requirements of any console/store. Apply the relevant checks to desktop, mobile, web, and handheld releases too.
 
-- [ ] Artifact names include project, version, and target where appropriate.
-- [ ] Checksums are published when distributing downloadable archives.
-- [ ] Debug symbols are retained or split out where practical.
-- [ ] Release notes describe user-visible changes, platform limitations, and known issues.
-- [ ] The exact artifact tested is the artifact being published.
+- [ ] Every supported mode and major feature can be entered, used, and exited without a crash, hang, dead end, or permanently blocked progression.
+- [ ] The application remains responsive to input; loading waits are bounded where possible and show progress or a clear status when lengthy.
+- [ ] Every essential menu and flow is operable with the primary supported input device; focus is visible and navigation has no dead ends.
+- [ ] Settings take effect immediately when promised and remain correct after restart when persistent.
+- [ ] Closing, suspending, backgrounding, losing focus, sleeping, and resuming do not cause crashes, hangs, duplicate actions, or avoidable loss of progress.
+- [ ] Network/service failure, offline startup, timeout, and reconnection are handled gracefully when networking exists; unavailable optional services do not make unrelated offline features unusable.
+- [ ] Saves and settings remain associated with the correct user/profile where profiles exist; switching users does not leak or overwrite another user's data.
+- [ ] Updates preserve compatible saves and user content; version transitions are tested with data created by the previous released version.
+- [ ] If purchases, entitlements, downloadable content, achievements, or online accounts exist, missing services and invalid/unavailable entitlements are handled without corrupting local progress.
+- [ ] Fresh install, existing-user upgrade, no-save/no-profile, offline, low-storage, permission-denied, and corrupted-config scenarios are tested where relevant.
+- [ ] No critical crash, data-loss bug, softlock, inaccessible required flow, or severe rendering/input failure remains in the release candidate.
+
+## 12. Release and deployment hygiene
+
+- [ ] Artifact names identify project, version, and target.
+- [ ] Checksums and signatures are published or verified where required by the distribution channel.
+- [ ] Debug symbols are retained or split out where practical; release artifacts do not accidentally include secrets or development-only assets.
+- [ ] License and third-party notices are shipped where required.
+- [ ] Release notes list user-visible changes, compatibility/migration notes, known issues, and supported targets.
+- [ ] Deployment publishes only artifacts built and tested for the current revision; failed jobs cannot leave a misleading partial release.
+- [ ] A rollback/recovery procedure exists for deployment failures where the hosting/distribution system supports it.
+
+## 13. Evidence and sign-off
+
+- [ ] Every required item is marked Pass or Fail; each N/A includes a reason.
+- [ ] Automated checks are linked to the flake output/job and their logs are retained as appropriate.
+- [ ] Manual checks identify tester, target/device/runtime, artifact revision, and result.
+- [ ] Release sign-off identifies the exact source revision and artifact hashes.
+- [ ] Platform/store certification is claimed only after the applicable official process has actually been completed.

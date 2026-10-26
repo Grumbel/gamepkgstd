@@ -44,3 +44,11 @@ Deliver changes as a cumulative git bundle rooted at the original base commit, f
 - Documented Windows x86/x86-64, Android API 21+, Linux, WebAssembly, and R36S/PortMaster target profiles, including Asyncify/JSPI and the distinction between R36S hardware, firmware, and PortMaster.
 - Checked current public Emscripten, Android NDK, and PortMaster documentation for the target-specific notes.
 - Remaining: validate each reference project flake and test real artifacts on target runtimes. No target binaries were built in this documentation-only revision.
+
+## Compliance checklist revision
+
+- Reworked `PACKAGING-CHECKLIST.md` into a topic-separated Pass/Fail/N/A compliance checklist for generic software and applicable game-specific behavior.
+- Added one-command Nix workflow, explicit target coverage, platform-specific checks for Windows, Android, WebAssembly, Linux, and PortMaster-style handhelds, and artifact/deployment evidence.
+- Added console-certification-inspired quality/lifecycle checks for stability, navigation, settings persistence, suspend/resume, offline/service failure, profile isolation, save migration, and release-candidate blockers.
+- Added accessibility review and evidence/sign-off requirements. The checklist explicitly states that these are portable quality checks, not console certification.
+- No project builds or target-device tests were run; this revision changes documentation only.
