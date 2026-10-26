@@ -20,6 +20,9 @@ Use this checklist as the sole compliance and release gate for projects followin
 - [ ] GitHub Actions and other CI providers are thin shims: install/setup Nix, select flake outputs, configure cache access, and upload/publish results. Build logic is not duplicated in workflow YAML.
 - [ ] Deployment is invoked through the flake-defined workflow; credentials are injected at deployment time and are not embedded in derivations or artifacts.
 - [ ] Build outputs and checks are distinguished: CI explicitly builds every required package rather than assuming `nix flake check` builds all `packages` outputs.
+- [ ] `checks.<system>` covers applicable formatting/linting, evaluation, compilation, automated tests, package/artifact smoke checks, and static-site checks; each check runs reproducibly with declared inputs.
+- [ ] The documented `nix flake check` command is understood as evaluating the flake and building declared checks, not as proof that every package, target runtime, or deployment works.
+- [ ] Any `--all-systems` use matches the intended coverage; target executables are only claimed runtime-tested when run on suitable hardware or an explicitly configured emulator.
 - [ ] Build and deployment steps fail clearly on errors; a failed build cannot publish stale artifacts as if they were current.
 
 ## 3. Native builds and cross-compilation
@@ -70,6 +73,11 @@ For every target marked supported in the support matrix:
 - [ ] Startup, loading progress, errors, input focus, resize, and browser visibility changes are handled.
 - [ ] Persistent data is committed using the chosen browser storage mechanism; the user is not told data is saved before the commit succeeds.
 - [ ] Hosting paths, MIME types, compression, cache policy, and deployment destination are tested.
+- [ ] The HTML/CSS shell is responsive and usable at mobile and desktop sizes; canvas resolution follows its displayed size and device pixel ratio.
+- [ ] Essential controls, loading/errors, and status are accessible outside the canvas where practical; keyboard focus, touch input, page scrolling, and fullscreen behavior are intentional.
+- [ ] Relative assets work when hosted below a URL prefix; the page does not assume the site root or undeclared server-side APIs.
+- [ ] The page handles module/asset load failure and storage unavailable/full/cleared states without falsely claiming that data was saved.
+- [ ] Browser visibility/focus changes do not leave stuck input, audio, or simulation state; resizing and orientation changes are tested where relevant.
 
 ### Linux desktop
 

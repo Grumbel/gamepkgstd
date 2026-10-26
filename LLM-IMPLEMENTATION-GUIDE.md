@@ -47,7 +47,8 @@ Adapt the order to the project's actual risks. Avoid broad rewrites when a focus
 
 - Make the implementation and its tests/docs agree. Prefer a regression test for every bug that can reasonably be tested automatically.
 - Use the repository's documented Nix flake commands as the authoritative build/test/package path. Do not move build logic into CI YAML or a parallel shell script.
-- Test the installed/package artifact from outside the source/build tree, not only the development executable.
+- Inspect what `nix flake check` actually covers. It builds declared `checks` for the selected system(s), but does not automatically build every `packages` output or prove target-device/browser behavior. Ensure required package builds are explicit in checks or the documented aggregate CI/release command; distinguish evaluation-only checks from builds and tests.
+- Test the installed/package artifact from outside the source/build tree, not only the development executable. For WASM, inspect and smoke-test the actual static website output, including URL-prefix hosting and browser loading, rather than treating successful compilation as proof that the site works.
 - Exercise failure paths that could corrupt data: interrupted writes, full/unwritable storage, invalid configuration, migration from an older version, and recovery after process termination where relevant.
 - For cross-target behavior that cannot be executed locally, validate artifact metadata/architecture/dependencies and explicitly leave device/runtime checks unverified.
 - Re-run relevant tests after the final code change. Report the exact commands and their outcomes.
