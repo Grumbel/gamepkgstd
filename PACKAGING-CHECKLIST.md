@@ -29,12 +29,16 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Runtime libraries and plugins resolve on a clean target environment.
 - [ ] `--help` and `--version` work without starting graphics/audio.
 - [ ] Invalid CLI options fail with a useful message and non-zero status.
-- [ ] Config, state, save, and cache paths resolve as documented.
+- [ ] Asset, user-data, config, state, cache, temp, and runtime paths resolve according to the target platform.
+- [ ] Path overrides use consistent hyphenated names and affect only their own category.
+- [ ] XDG base variables are validated as absolute paths; native Windows and portable/handheld layouts are tested separately.
+- [ ] Portable mode has an explicit activation mechanism and handles read-only/full storage without silently switching profiles.
 - [ ] Missing/unwritable user directories produce a useful diagnostic.
 - [ ] No writes go into the install prefix or current working directory by default.
 - [ ] `--no-save` (if supported) prevents all persistent gameplay writes.
 - [ ] A missing or malformed config does not destroy saves or silently overwrite the original config.
 - [ ] A clean install can start with no pre-existing user configuration.
+- [ ] Temporary files are safely created and cleaned up; durable files are never stored only in temp directories.
 
 ## 4. Linux desktop package
 
@@ -64,8 +68,27 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Handheld launcher, environment variables, save location, and control mapping are documented.
 - [ ] Bundled libraries do not override platform libraries accidentally; launcher environment is intentional.
 - [ ] Artifact format, architecture, and runtime dependencies are checked even when the target cannot run in CI.
+- [ ] PortMaster/handheld launcher path variables and the final-vs-base-directory convention are documented.
 
-## 7. Options and recovery
+## 7. Nix-first CI
+
+- [ ] The flake defines the authoritative build, test, lint, package, and cross-build logic.
+- [ ] The documented CI flake output actually builds/runs all required checks and required package outputs; `nix flake check` alone does not automatically build every `packages` output.
+- [ ] GitHub Actions only provisions Nix, selects the documented flake output, configures optional caching, and handles artifact upload/release credentials.
+- [ ] Local commands reproduce CI checks without needing logic hidden in workflow YAML.
+- [ ] Cross-target executables are run only on compatible runners/emulators; otherwise artifact validation and manual checks are recorded.
+
+## 8. Mods and add-ons
+
+- [ ] Shipped assets, user add-ons, configuration, cache, and temporary downloads are kept distinct.
+- [ ] Add-on discovery and load order are deterministic and documented.
+- [ ] Manifests validate IDs, versions, game/API compatibility, and dependencies.
+- [ ] Duplicate IDs, missing dependencies, malformed packages, and load failures produce useful diagnostics.
+- [ ] Archive extraction prevents path traversal and installs from a validated staging directory.
+- [ ] Third-party code is not executed by default; any executable-mod trust model is documented.
+- [ ] A safe mode can start without third-party add-ons where add-ons are supported.
+
+## 9. Options and recovery
 
 - [ ] Defaults, saved settings, and command-line override precedence are documented and tested.
 - [ ] CLI overrides do not rewrite saved preferences just by launching the game.
@@ -75,7 +98,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Keyboard and controller navigation cover essential menus on supported targets.
 - [ ] Controller disconnect/reconnect and rebind cancellation do not leave input stuck or corrupt bindings.
 
-## 8. Release artifact hygiene
+## 10. Release artifact hygiene
 
 - [ ] Artifact names include project, version, and target where appropriate.
 - [ ] Checksums are published when distributing downloadable archives.

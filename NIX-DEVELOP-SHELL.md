@@ -107,12 +107,12 @@ Anything the **packaged** binary gets via `makeWrapper` / `qtWrapperArgs` /
 |---------|---------|
 | Qt plugins | `QT_PLUGIN_PATH` |
 | dlopen libs | `LD_LIBRARY_PATH` (PipeWire, etc.) |
-| Data / assets | `--datadir`, `XDG_DATA_DIRS`, baked `DATA_PREFIX` |
+| Data / assets | `--data-dir`, `XDG_DATA_DIRS`, baked `DATA_PREFIX` |
 | Models / side tools | `PATH`, project-specific `*_MODEL` vars |
 
 Do **not** copy Qt-only variables into a non-Qt project. Pingus is SDL2/OpenAL;
 the develop shell mainly clears a hostile system `LD_LIBRARY_PATH` and passes
-`--datadir $PINGUS_SOURCE/data`.
+`--data-dir "$PINGUS_SOURCE/data"`.
 
 ### 6. Build type split
 
@@ -168,7 +168,7 @@ except Exception:
 | `BILTOO_BUILD_DIR` | `PINGUS_BUILD_DIR` (default `/tmp/pingus-build`) |
 | `biltoo-configure` | `pingus-configure` |
 | `biltoo-build` | `pingus-build` |
-| `biltoo-run` | `pingus-run` (`--datadir $PINGUS_SOURCE/data`) |
+| `biltoo-run` | `pingus-run` (`--data-dir "$PINGUS_SOURCE/data"`) |
 | `biltoo-run-gdb` | `pingus-run-gdb` |
 | `THUMTOO_SOURCE_DIR` | *(n/a — `external/` is in-tree)* |
 | `QT_PLUGIN_PATH` / PipeWire | clear system `LD_LIBRARY_PATH`; SDL/OpenAL via `inputsFrom` |

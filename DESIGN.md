@@ -60,7 +60,7 @@ Follow the pattern in `NIX-DEVELOP-SHELL.md`:
 | Build location | Out-of-tree, sticky (`/tmp/project-build` or `$HOME/.cache/…`) | Nix store |
 | Helpers | `project-configure`, `project-build`, `project-run`, `project-run-gdb` as real PATH scripts | Wrappers via `makeWrapper` / `qtWrapperArgs` |
 | Nested C++ deps | Live sibling checkouts when possible | Flake inputs / fixed store paths |
-| Env for dlopen | Mirror package wrapper (`LD_LIBRARY_PATH`, plugin paths, `--datadir`) | Handled by wrapper |
+| Env for dlopen | Mirror package wrapper (`LD_LIBRARY_PATH`, plugin paths, `--data-dir`) | Handled by wrapper |
 
 ### Packaging artefacts
 
@@ -81,70 +81,108 @@ Also produce:
 - Windows zip / installer (NSIS or simple zip from Nix)
 - PortMaster / R36S port package (`*.sh` launcher + `conf/` next to the binary)
 
-REUSE / SPDX headers on every source file; GPLv3+ for new projects unless the existing tree uses something else.
+Use the project's chosen license consistently, preserve third-party license notices, and follow REUSE/SPDX conventions where adopted or required by the project.
 
 ---
 
 ## 3. Path Handling
 
-### 3.1 XDG Base Directory (desktop Linux & most Unix)
+Keep the *kind of data* separate from the *physical directory used on a platform*. A platform may place several kinds in one writable root, but code and options must retain the distinction. Never infer a writable location from the current working directory.
 
-| Kind | Variable | Fallback | Example |
-|------|----------|----------|---------|
-| Config | `$XDG_CONFIG_HOME` | `~/.config` | `~/.config/<app>/config` |
-| State / savegames / stats | `$XDG_STATE_HOME` | `~/.local/state` | `~/.local/state/<app>/stats` |
-| Cache | `$XDG_CACHE_HOME` | `~/.cache` | rarely needed for these games |
-| Data (read-only assets) | install prefix or `--datadir` | next to binary / `share/<app>` | |
+### 3.1 Path categories
 
-**Best practice observed in dualthrust / kurvenrausch / kugelmatch:**
+| Category | Contents | Desktop Linux / Unix default | Writable? |
+|---|---|---|---|
+| Installed assets | Shipped levels, images, audio, shaders, built-in content | Install prefix, commonly `share/<app>` | No |
+| User data | User-installed mods/add-ons and content the user explicitly imports | `$XDG_DATA_HOME/<app>`; default `~/.local/share/<app>` | Yes |
+| Config | Preferences, key bindings, UI settings | `$XDG_CONFIG_HOME/<app>`; default `~/.config/<app>` | Yes |
+| State | Save games, progress, high scores, session history | `$XDG_STATE_HOME/<app>`; default `~/.local/state/<app>` | Yes |
+| Cache | Re-creatable downloads, shader caches, thumbnails | `$XDG_CACHE_HOME/<app>`; default `~/.cache/<app>` | Yes |
+| Temporary files | Incomplete downloads, extraction staging, disposable scratch output | OS temporary-directory API, with a private per-app subdirectory if needed | Yes, ephemeral |
+| Runtime files | Locks, sockets, other short-lived coordination files | `$XDG_RUNTIME_DIR/<app>` when valid and available | Yes, ephemeral |
 
-- Config → `$XDG_CONFIG_HOME/<app>/…`
-- Mutable state (saves, stats, high-scores, fog-of-war) → `$XDG_STATE_HOME/<app>/…`
-- Never write into the install prefix or the current working directory by default.
-- Create parent directories with `mkdir -p` semantics; fail loudly if an absolute path cannot be derived (do not guess a relative location).
+`XDG_DATA_HOME`, `XDG_CONFIG_HOME`, `XDG_STATE_HOME`, and `XDG_CACHE_HOME` are *base directories*, not the application's final directory. Append the application-specific directory exactly once. Honor an XDG variable only when it is set to an absolute path; otherwise use the specification's default. Do not treat `XDG_RUNTIME_DIR` as a general temp directory: it is optional, user-owned, private, and intended for runtime objects. Validate its ownership and permissions before using it. Use the platform's temporary-directory API for scratch files.
 
-Pingus historically used a single user dir (with a versioned subdirectory `pingus-0.8/`) and still supports a legacy `~/.pingus/` for compatibility; newer projects prefer the split config/state model.
+The XDG Base Directory Specification is a desktop Unix convention, not a universal path API. Do not impose XDG semantics on Windows, Android, web builds, or a handheld port merely because the code uses SDL.
 
-### 3.2 Windows
+### 3.2 One consistent path-option vocabulary
 
-- Prefer `%APPDATA%\<VendorOrApp>\` for config and `%LOCALAPPDATA%\<App>\` for state, or the same XDG-style layout under the user profile when a portable XDG helper is present.
-- SDL’s `SDL_GetPrefPath` / `SDL_GetBasePath` are acceptable fallbacks.
-- Avoid writing next to the `.exe` unless the user explicitly chooses a portable mode.
+Use hyphenated long options consistently. The recommended overrides are:
 
-### 3.3 Android
+| Option | Meaning |
+|---|---|
+| `--data-dir PATH` | Root of the shipped/read-only game assets; preferred replacement for legacy `--datadir` |
+| `--user-data-dir PATH` | User-managed content, including installed mods and add-ons |
+| `--config-dir PATH` | Preferences and input bindings only |
+| `--state-dir PATH` | Saves, progress, scores, and other durable gameplay state |
+| `--cache-dir PATH` | Re-creatable cache files |
+| `--temp-dir PATH` | Scratch files for this process; mainly useful for diagnostics, testing, and constrained launchers |
+| `--show-paths` | Print all resolved paths and their source, then exit |
 
-- Writable: `SDL_AndroidGetInternalStoragePath()` + `/<app>/` (or the equivalent JNI path).
-- Assets: empty “datadir” that resolves against the APK asset tree (`datadir://…` style virtual paths).
-- Do **not** attempt classic Unix `$HOME` or `/sdcard` without explicit permission handling.
+These are optional common conventions, not a requirement to expose every override in every game. Keep the spelling consistent for every path option that is exposed. If compatibility requires the legacy `--datadir`, retain it as a deprecated alias for `--data-dir`, document the alias, and make both feed the same internal field. Do not silently reinterpret `--data-dir` as the user's writable content directory.
 
-### 3.4 Emscripten / Web
+Path resolution order for each independently overridable category is:
 
-- Virtual FS (IDBFS / MEMFS). Persist under a fixed mount such as `/<app>-user/`.
-- Call an explicit flush (IndexedDB sync) on quit / periodic save.
+1. Explicit CLI option for that category.
+2. Documented application-specific environment override, if provided by the launcher.
+3. Explicit portable-mode root, if portable mode is enabled.
+4. Native platform default.
 
-### 3.5 R36S / PortMaster / ArkOS handhelds
+Do not combine these sources ad hoc. `--config-dir` must not relocate saves, mods, cache, or temp files. A portable root may intentionally group categories below one root, but they should still use separate subdirectories. `--show-paths` should report the resolved location and whether it came from CLI, environment, portable mode, or a platform default.
 
-Special rules observed in kurvenrausch / dualthrust / Pingus (`PINGUS_NO_XDGCPP`):
+### 3.3 Linux and Unix desktop: XDG
 
-1. Prefer an environment override such as `$KURVENRAUSCH_STATE_DIR` or `$APP_STATE_DIR` when set by the port launcher.
-2. If the binary lives under `…/ports/<name>/`, keep state in `…/ports/<name>/conf/` (or `app_base/conf`) so a direct launch still works without XDG.
-3. When `XDG_STATE_HOME` already ends in `conf/`, treat it as the final directory (PortMaster convention).
-4. Fall back to `$HOME/.config/<app>/` or `$HOME/.local/state/<app>/` only when the above do not apply.
-5. Clear a hostile system `LD_LIBRARY_PATH` that can pull the wrong SDL / GLES libraries; the ArkOS sysroot is used at link time.
+For a normal installed desktop build, use the XDG paths in the category table above. Shipped assets are found through the install layout or an explicit `--data-dir`; they do not belong in a writable XDG directory. Do not write into the install prefix or current working directory by default.
 
-Document the exact layout in `mk/r36s/README.md` (or equivalent) so PortMaster maintainers know where saves live.
+Use the home directory only to construct the documented fallback when the relevant XDG variable is unset or invalid. If neither a valid base directory nor a usable home directory can be resolved, report the problem rather than falling back to a relative path. Create application subdirectories as needed and report actionable errors when they cannot be created.
 
-### 3.6 Data / asset location
+### 3.4 Windows
 
-- Runtime search order (recommended):
+For an installed build, use Windows known-folder APIs (or a library abstraction that maps to them) rather than assuming Unix home paths:
 
-  1. `--datadir PATH` (CLI)
-  2. Environment variable `$<APP>_DATADIR` / `$PINGUS_DATADIR`
-  3. Directory next to the executable (`SDL_GetBasePath()` + `data/`)
-  4. Install prefix `share/<app>`
-  5. Compile-time baked path (last resort)
+- Config: Roaming AppData, typically `%APPDATA%/<Vendor>/<App>`.
+- State and user data: Local AppData by default, typically `%LOCALAPPDATA%/<Vendor>/<App>`; use Roaming AppData only when roaming is actually desired.
+- Cache and temporary files: Local AppData cache subdirectory and the OS temporary-directory API, respectively.
+- Installed assets: the package's installed data directory, resolved relative to the executable or through an installed-resource lookup.
 
-- Virtual schemes (`datadir://…`) keep CMake/install independent of the physical layout and work on Android assets.
+SDL path helpers may be used where their behavior matches the intended category, but do not use one generic preference path for every kind of data. Do not write beside the executable in an ordinary installation.
+
+### 3.5 Portable builds and removable installations
+
+Portable mode is an explicit distribution or launch profile, not a guess based only on the executable's location. Enable it through a documented marker file, launcher setting, or `--portable` option. The package must state which mechanism is authoritative.
+
+- Keep the shipped application and assets separate from writable user data.
+- Put writable files below a documented directory such as `userdata/config`, `userdata/state`, `userdata/data`, `userdata/cache`, and `userdata/tmp` beside the portable package, or under a launcher-supplied writable root.
+- Never assume the executable directory is writable. If portable storage is read-only or full, explain the failure and offer the native user-directory mode where possible; do not silently start writing elsewhere.
+- Portable mode must not unexpectedly import or modify the installed version's normal user profile. Make profile selection visible in diagnostics.
+- Preserve paths containing spaces and non-ASCII characters. Do not build paths by shell-concatenating untrusted strings.
+
+### 3.6 R36S / PortMaster / ArkOS and similar handheld ports
+
+Treat these as a distinct *portable launcher profile*, even though the underlying system may be Linux. Follow the platform's current launcher contract rather than applying desktop XDG rules blindly.
+
+- Prefer a documented launcher-provided path override for writable files. Use a project-specific variable or a shared `APP_*_DIR` convention, and define whether it names a base root or a final category directory.
+- If the PortMaster contract supplies a final `conf/` directory through a variable such as `XDG_CONFIG_HOME` or a launcher-specific variable, do not append another application directory to it. This exception must be explicit in the port integration, not inferred globally from a path merely ending in `conf`.
+- Keep save data and user content in the launcher/platform's expected writable location; do not assume the binary's directory is writable or that the current working directory is stable.
+- Document the actual layout, environment overrides, and migration behavior in the port README and launcher script.
+- Keep the runtime library environment intentional. Do not let a host `LD_LIBRARY_PATH` accidentally select incompatible SDL, GLES, or other shared libraries; clear or set it in the launcher only when required by the target runtime.
+
+### 3.7 Android and web
+
+- **Android:** use the app's sandboxed internal storage APIs for writable config/state/cache, and platform-approved external storage only when the feature and permissions require it. Treat APK assets as read-only virtual assets; do not assume `$HOME`, a normal executable-relative `data/` directory, or unrestricted `/sdcard` access.
+- **Emscripten/web:** use the virtual filesystem and a documented mount for persistent data. Distinguish in-memory temporary files from persisted storage, and flush asynchronous persistence (for example IndexedDB-backed storage) according to the runtime's API. Do not promise persistence until the flush completes.
+
+### 3.8 Asset lookup and virtual assets
+
+Asset lookup must be deterministic. A typical order is: explicit `--data-dir`, documented application-specific environment override, package-relative asset location when the distribution layout defines one, then a compiled install location. Do not silently fall back to an unrelated directory or the current working directory. A virtual asset abstraction such as `datadir://...` may be useful for APK/web assets, but its scheme and semantics must be documented and must not leak into ordinary filesystem APIs.
+
+### 3.9 Path correctness and migration
+
+- Normalize and validate paths at the platform boundary, but preserve the user's intended path and avoid resolving symlinks unless required.
+- Use native path APIs rather than assuming `/` separators or UTF-8 conversion behavior on every platform.
+- Make directory creation idempotent. Use restrictive permissions for private saves/config where supported.
+- Temporary files must be uniquely and safely created; never use predictable names in shared temp directories. For atomic replacement of a durable file, create the staging file in the destination directory so the final rename can remain on the same filesystem. `--temp-dir` does not redirect these atomic-save staging files.
+- When a release changes a path convention, migrate or continue reading the old location deliberately. Never delete the old directory automatically. If both old and new locations contain data, define a deterministic conflict policy and explain it in release notes.
 
 ---
 
@@ -154,8 +192,8 @@ Document the exact layout in `mk/r36s/README.md` (or equivalent) so PortMaster m
 |-----|--------|-------|
 | **F11** | Toggle fullscreen | Universal across kugelmatch, kurvenrausch, dualthrust, SuperTux |
 | **Alt+Enter** | Toggle fullscreen | Same as F11; common Windows / SDL expectation |
-| **F8** | Cycle renderer / backend | Software ↔ GLES / CPU ↔ GPU (kurvenrausch, kugelmatch) |
-| **F12** | Screenshot | Prefer `~/Pictures` when it exists, else CWD or XDG pictures dir |
+| **F8** | Optional renderer/backend debug cycle | Only for games with multiple backends; document it and do not treat it as a universal shortcut |
+| **F12** | Screenshot | Use the platform pictures directory (XDG user-dir lookup on Linux); do not default to CWD |
 | **Esc** | Pause → menu → quit (layered) | Never hard-quit on first press while in-game |
 | **Enter / Space** | Confirm / start / respawn | |
 | **P** | Pause | |
@@ -164,7 +202,7 @@ Document the exact layout in `mk/r36s/README.md` (or equivalent) so PortMaster m
 
 Fullscreen should restore the previous windowed size and position when possible. Prefer “desktop” fullscreen (borderless) over exclusive mode unless the user asks for exclusive.
 
-These match common desktop HIG expectations (GNOME HIG, KDE HIG, Windows UX guidelines for media/games) even though the games themselves are not full desktop applications.
+Treat these as suggested defaults, not universal requirements. Preserve established project controls where changing them would surprise players, and document intentional deviations.
 
 ---
 
@@ -192,23 +230,29 @@ Usage: <game> [options]
   -v, --version           Print full version string and exit
   -f, --fullscreen        Start fullscreen
   -w, --windowed          Start windowed
-  --datadir PATH          Override data directory
-  --config-dir PATH       Override XDG config directory
+  --data-dir PATH         Override shipped/read-only asset directory
+  --user-data-dir PATH    Override user-installed content directory
+  --config-dir PATH       Override preferences directory
+  --state-dir PATH        Override saves and durable gameplay state
+  --cache-dir PATH        Override re-creatable cache directory
+  --temp-dir PATH         Override scratch-file directory
+  --portable              Use the package-local writable profile, if supported
+  --show-paths            Print resolved paths and exit
   --renderer auto|software|gles   (or --cpu / --gpu)
   --vsync on|off
   --fps N                 Target FPS when vsync off (0 = uncapped)
   --mute
-  --volume 0..10
+  --volume VALUE          Use the documented range for this game
 
 Developer / testing (do not write to the user config):
   --screenshot FRAME,PATH
   --demo / --attract
-  --no-save               Do not touch stats / world saves
+  --no-save               Disable persistent gameplay writes
 ```
 
-CLI flags that set a preference should **override** the config file for that run but, by default, should **not** rewrite the file unless the user later changes the option inside the menu. Use a bitmask of “CLI overrides” (kugelmatch pattern) so the distinction is explicit.
+CLI flags that set a preference should **override** the config file for that run but, by default, should **not** rewrite the file merely because the game starts. Track which settings were explicitly overridden in the parsed options structure so the distinction is explicit; a bitmask is not required.
 
-Always print a short summary of resolved paths (config, state, datadir) at debug log level or behind a `--show-paths` flag; this dramatically reduces support friction on handhelds and Flatpaks.
+Make resolved paths (assets, user data, config, state, cache, temp, and runtime when applicable) available at debug log level or through `--show-paths`; this dramatically reduces support friction on handhelds and Flatpaks.
 
 ---
 
@@ -277,7 +321,8 @@ Persist every option that the player can change; do not reset debug toggles on e
 | KDE HIG | https://develop.kde.org/hig/ |
 | PortMaster | https://portmaster.games/ (handheld packaging conventions) |
 | REUSE | https://reuse.software/ |
-| Nix flakes | https://nixos.wiki/wiki/Flakes |
+| Nix flakes and `nix flake check` | https://nix.dev/manual/nix/2.18/command-ref/new-cli/nix3-flake-check |
+| Windows known folders | https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid |
 
 ---
 
@@ -341,7 +386,7 @@ A release checklist should cover at least: clean configure/build, tests that are
 - Prefer long options with explicit values for settings (`--renderer gles`) over a growing collection of overlapping boolean aliases. Keep `-h` and `-v` for help and version; only add short aliases when they are unambiguous and stable.
 - Paths supplied by the user must be treated as paths, not shell fragments. Quote paths in launcher scripts and preserve spaces and non-ASCII characters.
 - Document whether a flag is startup-only, persistent, diagnostic, or intended for automation. Developer flags should not silently alter player saves or preferences.
-- `--show-paths` (or equivalent diagnostics) should report resolved config, state, data, and save paths without dumping secrets or unrelated environment variables.
+- `--show-paths` (or equivalent diagnostics) should report resolved asset, user-data, config, state, cache, temp, and runtime paths where applicable, without dumping secrets or unrelated environment variables.
 
 ### Precedence and persistence
 
@@ -353,7 +398,7 @@ Use this precedence for ordinary preferences:
 
 An explicit command-line option must not rewrite the saved configuration merely because the game starts. A change made in the options menu should be persisted according to the game's save policy. Make this distinction visible in code, preferably through a parsed options structure that records which values were explicitly overridden, rather than scattered ad-hoc checks.
 
-`--config-dir`, `--datadir`, and similar path overrides should affect only the paths they name. Do not let a config-directory override unexpectedly relocate saves unless that behavior is explicitly documented. `--no-save` should disable all persistent gameplay writes, including autosaves and high scores, and should be testable as a single contract.
+`--config-dir`, `--data-dir`, `--state-dir`, and similar path overrides should affect only the paths they name. Do not let a config-directory override unexpectedly relocate saves unless that behavior is explicitly documented. `--no-save` should disable all persistent gameplay writes, including autosaves and high scores, and should be testable as a single contract.
 
 ### Suggested common option set
 
@@ -361,12 +406,13 @@ Treat these as candidates, not mandatory flags for every game:
 
 - `-h, --help`, `-v, --version`
 - `-f, --fullscreen`, `-w, --windowed`
-- `--datadir PATH`, `--config-dir PATH`
+- `--data-dir PATH`, `--user-data-dir PATH`, `--config-dir PATH`, `--state-dir PATH`, `--cache-dir PATH`, `--temp-dir PATH` (expose only the useful subset)
 - `--renderer auto|...` only when multiple renderers are supported
 - `--vsync on|off` and `--fps N` only when meaningful for the renderer
 - `--mute`, `--volume VALUE` when audio is supported
 - `--no-save` for safe test/demo runs
 - `--show-paths` or `--diagnostics` for troubleshooting
+- `--portable` only for builds that implement a documented portable profile
 
 Do not expose every menu preference as a CLI option by default. Add flags when they help automation, debugging, accessibility, deployment, or reproducible testing.
 
@@ -403,6 +449,33 @@ Do not expose every menu preference as a CLI option by default. Add flags when t
 - Keep logs useful and bounded. Diagnostics should identify version/build, selected renderer, detected input devices when relevant, and resolved paths; avoid logging private data or full environment dumps by default.
 - Save atomically where practical: write a temporary file in the destination directory, flush/close it, then rename it into place. Handle interrupted or failed writes without truncating the last valid save.
 
-## 17. Packaging validation checklist
+## 17. Mods and add-ons
+
+Mods, custom levels, translations, themes, and other add-ons are user-managed content, not shipped assets and not configuration. Keep them in the user-data category unless a specific platform requires a different physical layout.
+
+- Define the supported add-on types and whether each is data-only or executable. Prefer declarative data formats. Do not treat arbitrary scripts, native libraries, or downloaded binaries as harmless content.
+- Keep built-in content, user-installed content, and temporary workshop/download staging separate. Shipped add-ons belong to the package; user-installed add-ons belong in the user-data directory; caches and incomplete downloads belong in cache/temp directories.
+- Define deterministic discovery and precedence. A reasonable default is explicit command-line selection, enabled user add-ons, then built-in content, but the game must document the actual order. Do not let filesystem enumeration order determine load order; use a stable sort or explicit priority/dependency metadata.
+- Provide a manifest with a stable identifier, display name, version, supported game/API version, content type, and declared dependencies where applicable. Validate identifiers and paths. Detect duplicate IDs, missing dependencies, incompatible versions, and dependency cycles with actionable errors.
+- Make enable/disable and load order discoverable in the UI or documented config. If load order affects compatibility, show it and make it reproducible. Do not silently overwrite one add-on with another sharing the same ID.
+- Do not execute add-on code by default. If executable mods are supported, document the trust boundary and permissions; do not imply that a sandbox exists unless one is actually enforced. Warn before loading untrusted code and avoid automatic execution of newly downloaded content.
+- Downloads and extraction must defend against path traversal, absolute paths, symlinks escaping the destination, archive bombs, and partial/corrupt packages. Extract into a staging directory, validate, then install atomically. Do not overwrite unrelated user files.
+- Store add-on settings separately from global preferences where practical. Uninstalling an add-on must not delete saves or user-created content without an explicit confirmation. Define what happens to a save that references a missing or disabled add-on.
+- Provide diagnostics that list add-on IDs, versions, enabled state, load order, and compatibility errors without dumping private paths or user content. A safe mode should be able to start without third-party add-ons to recover from a broken installation.
+- Test with no add-ons, one valid add-on, duplicate IDs, missing dependencies, incompatible versions, malformed manifests, and an add-on that fails to load. Document whether updates preserve user settings and whether old add-on versions are backed up.
+
+## 18. Nix-first CI and GitHub integration
+
+The Nix flake is the single source of truth for build, test, lint, package, and cross-compilation logic. CI must invoke the flake rather than reimplementing those steps in workflow YAML or separate shell scripts that drift from local builds.
+
+- Put buildable packages in `packages`, automated checks in `checks`, and reusable development tools in `devShells` as appropriate. Checks should encode the commands and dependencies they need as derivations so they run in a clean, reproducible environment.
+- Make the intended CI entry point explicit, for example `nix flake check` or a named `checks.<system>.ci` derivation. `nix flake check` builds derivations in `checks`, but does not automatically build every derivation in `packages`; include required package builds as checks/dependencies or explicitly select them in the documented flake entry point. Merely evaluating the flake is not equivalent to building all packages or running all tests.
+- GitHub Actions is a thin shim: provision the required Nix version/features, configure caching if desired, then invoke the documented flake entry point. Keep platform matrices and target selection minimal and declarative; do not duplicate compiler flags, dependency lists, build commands, or test logic in YAML.
+- For cross-compilation, expose target packages/checks through the flake. CI should build those outputs from the flake, and only run target executables when a suitable runner or explicitly configured emulator exists. Otherwise validate artifacts and record the manual test requirement.
+- Keep secrets and signing credentials in the CI service, not in the flake. The flake describes reproducible build logic; publishing credentials and release permissions remain workflow concerns.
+- Document the same local commands that CI uses. A developer should be able to reproduce a failed CI check with `nix build` / `nix flake check` without reverse-engineering workflow YAML.
+- Avoid a second authoritative build script. Small GitHub workflow steps that install/configure Nix, select a flake output, or upload an already-built artifact are acceptable shims; build and test behavior belongs in the flake.
+
+## 19. Packaging validation checklist
 
 Use `PACKAGING-CHECKLIST.md` for the release gate and artifact matrix. The short rule is: a package is not complete merely because it compiled. It must install, locate its data, create writable directories, start from an unrelated working directory, and expose the expected version and diagnostics on the target platform.
