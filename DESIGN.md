@@ -232,7 +232,7 @@ Use hyphenated long options consistently. The recommended overrides are:
 | `--data-dir PATH` | Root of installed/read-only application assets; preferred replacement for legacy `--datadir` |
 | `--user-data-dir PATH` | User-managed content, including installed mods and add-ons |
 | `--config-dir PATH` | Preferences and input bindings only |
-| `--state-dir PATH` | Persistent application state |
+| `--state-dir PATH` | Persistent application state, such as savegames, autosaves  |
 | `--cache-dir PATH` | Re-creatable cache files |
 | `--temp-dir PATH` | Scratch files for this process; mainly useful for diagnostics, testing, and constrained launchers |
 | `--show-paths` | Print all resolved paths and their source, then exit |
