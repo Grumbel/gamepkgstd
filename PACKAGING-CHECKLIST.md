@@ -33,6 +33,8 @@ Use this checklist as the sole compliance and release gate for projects followin
 - [ ] SDL1.2 legacy targets (including GP2X/Wiz-era systems) and OLPC XO-1's SDL/X11 options are evaluated against their actual APIs and performance limits.
 - [ ] Conventional desktop GUI framework choice is deliberate; Qt is the default in this project family, and GTK or another framework has a concrete justification if selected.
 - [ ] Resizing, viewport changes, UI scale, aspect ratio, and minimum supported resolution are tested; low-resolution handhelds are not assumed to support desktop-sized layouts.
+- [ ] Cursor visibility is intentional for controller-only and mouse-driven modes; SDL cursor hiding is tested on the actual target, and a visible cursor that survives SDL hiding is traced to the owning layer before choosing a fix.
+- [ ] Desktop mouse interaction can restore the pointer, and handheld virtual-mouse/overlay behavior is tested without breaking other SDL applications.
 
 ## 4. Native builds and cross-compilation
 

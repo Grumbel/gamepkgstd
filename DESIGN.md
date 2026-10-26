@@ -60,6 +60,18 @@ Choose libraries against the complete support matrix, not desktop convenience al
 - **For a conventional desktop GUI, prefer Qt over GTK by default** in this project family, unless an existing application, platform integration requirement, or measured dependency/size constraint gives a concrete reason to choose otherwise. Do not introduce GTK merely to add a basic GUI. For games, SDL is usually the more appropriate primary window/input layer; Qt can still be appropriate for a separate editor, launcher, or tool UI.
 - **Do not assume one UI framework fits every target.** A Qt desktop application, SDL game, legacy X11/SDL1.2 port, and browser-hosted WASM application may need distinct platform adapters while sharing core logic and data formats. Keep that separation explicit.
 
+### Mouse pointer visibility and platform integration
+
+Treat cursor visibility as an explicit application/platform policy, not an incidental default. SDL2 starts with the cursor shown; use the documented `SDL_ShowCursor(SDL_DISABLE/SDL_ENABLE)` API (or the equivalent for the selected SDL version) when the application knows whether a pointer is useful. Do not assume that calling the SDL API controls a cursor drawn independently by the firmware, a virtual-mouse service, a window system, or a compositor.
+
+- Controller-first games and full-screen applications should normally hide the system pointer while it is irrelevant, then show it when mouse interaction is available or resumes. A desktop game should not permanently hide the pointer if the user can interact with menus or the desktop using a mouse.
+- Before adding a workaround, reproduce the issue with a minimal SDL test program on the exact target firmware and runtime. Test both explicit cursor hide/show and a mouse-driven application. Record whether the visible pointer is owned by SDL, the video backend, the window system/compositor, or a separate firmware/virtual-mouse layer.
+- If SDL reports the cursor hidden but a pointer remains visible, investigate the backend/runtime or independent pointer overlay before adding application code. Fix a confirmed shared SDL/backend defect at that shared layer when possible; fix a firmware-level virtual pointer in the firmware/configuration/launcher layer when that layer owns it. Prefer an upstreamable patch or a narrowly scoped target configuration over a global behavioral change that breaks mouse-based applications.
+- Use per-application cursor policy only when it expresses real UI behavior (for example, hide during controller-driven gameplay and show on mouse activity), not to compensate for a platform bug repeated across every port. If a shared platform fix is unavailable, keep any workaround small, documented, and target-gated.
+- On desktop, test that mouse interaction restores a visible pointer and that leaving the application does not strand the system pointer hidden. On handhelds, test startup, gameplay, overlays/menus, virtual-mouse activation, focus changes, and exit.
+
+See the [SDL2 cursor API](https://wiki.libsdl.org/SDL2/SDL_ShowCursor) for the application-level control.
+
 ### Display size, scaling, and resizing
 
 Resizable layouts are the default where the platform supports them. Support window resizing on desktop, adapt to orientation and viewport changes on Android/web, and use the actual fixed display size on handhelds without pretending those screens are resizable. Distinguish physical display resolution, window/client size, internal render resolution, logical UI coordinates, and UI scale.
