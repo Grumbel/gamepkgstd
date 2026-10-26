@@ -4,7 +4,7 @@
 
 - Base commit: `21382b841669253dac16c4a6d584384df46534a6`
 - Current goal: maintain a generic, LLM-actionable contract for cross-platform packaging/runtime behavior and a separate evidence-based compliance gate.
-- Latest completed change: library/language selection, legacy platform graphics backends, SDL runtime compatibility, and low-resolution/resizable UI guidance; see the latest commit and `LLM-IMPLEMENTATION-GUIDE.md`.
+- Latest completed change: Linux/Android/Windows application identity, icons, launcher/package metadata, and validation requirements; see the latest commit and `DESIGN.md`.
 - Deliver a cumulative git bundle from the original base commit, following `AGENTS.md`.
 
 ## Current document roles
@@ -17,6 +17,8 @@
 - `NIX-DEVELOP-SHELL.md`: out-of-tree CMake development-shell pattern.
 
 ## Remaining follow-up ideas
+
+- Validate the new OS integration guidance against actual Linux package formats, Android APK/AAB packaging, and Windows portable/installer outputs; distinguish static metadata checks from UI launch tests.
 
 - Validate the conventions against current reference-project implementations and link to concrete examples.
 - Validate the Nix-first CI contract against reference-project flakes; do not claim target builds or device tests without running them.

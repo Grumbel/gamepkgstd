@@ -64,6 +64,10 @@ For every target marked supported in the support matrix:
 - [ ] Required DLLs/runtime components are bundled or their installation requirements are documented.
 - [ ] Paths work from directories containing spaces and non-ASCII characters.
 - [ ] The package runs without the build environment, developer PATH, or source tree.
+- [ ] GUI executables embed the expected multi-resolution `.ico`; the framework sets window/taskbar icons where needed.
+- [ ] Version resources contain accurate product/file version, name, publisher/company, and description where applicable.
+- [ ] Installer packages create the intended Start-menu shortcuts and optional desktop shortcut; uninstall removes installer-created integration without deleting user data. Portable archives are exempt from installer-only behavior.
+- [ ] File associations, protocol handlers, startup entries, and other shell integration are registered only when implemented, documented, and removable.
 
 ### Android
 
@@ -76,6 +80,9 @@ For every target marked supported in the support matrix:
 - [ ] Graphics surfaces/contexts and other lifecycle-bound resources are recreated after loss; audio, input, networking, and background work are paused, resumed, or cancelled according to a documented policy.
 - [ ] Lifecycle behavior is tested by backgrounding and resuming, recreating the activity where applicable, and killing the background process before reopening; recovery is verified on the minimum supported Android version and a current version.
 - [ ] VR applications declare their separate device/API requirements instead of inheriting the ordinary Android baseline.
+- [ ] Application ID remains stable across compatible updates; label, version metadata, permissions, exported components, and signing mode are correct.
+- [ ] Launcher icons include adaptive resources and any fallback resources required by the declared minimum API; check their appearance under different masks/backgrounds.
+- [ ] Release signing secrets are not stored in source control or embedded in reproducible build derivations; debug and release artifacts are distinguishable.
 
 ### WebAssembly
 
@@ -93,7 +100,11 @@ For every target marked supported in the support matrix:
 ### Linux desktop
 
 - [ ] Installed assets and executables use a documented prefix-relative layout; runtime dependencies are resolvable on the intended distribution/runtime.
-- [ ] XDG directories, desktop entry, icons, and optional AppStream/man-page metadata are correct where provided.
+- [ ] GUI apps install a valid `.desktop` entry with correct stable ID, `Name`, `Exec`, `Icon`, and suitable `Categories`; `Exec` works outside the source/build tree.
+- [ ] Icons are installed in a standard or package-format-correct location, resolve from the installed entry, and remain recognizable at actual launcher sizes.
+- [ ] AppStream metainfo is supplied and validated when relevant to the distribution/software-catalog workflow; otherwise its omission is justified.
+- [ ] Desktop entries and AppStream metadata pass available validators (for example `desktop-file-validate` and `appstreamcli validate`), and the installed package launches from the desktop environment.
+- [ ] MIME types, URI handlers, D-Bus activation, autostart, and desktop actions are declared only when implemented and appropriate.
 - [ ] `nix build` and `nix run` work if exposed as project interfaces.
 - [ ] Sandboxed package permissions are limited to required access when a sandboxed format is offered.
 
@@ -112,7 +123,17 @@ For every target marked supported in the support matrix:
 - [ ] Save-state writes survive interruption safely; corrupt/incompatible states fail without damaging ordinary saves or the previous valid state.
 - [ ] Save/load is tested across gameplay and transitions, application restart, corrupt files, and storage errors where applicable; untested hardware behavior is marked Unknown.
 
-## 6. Installed artifact and runtime behavior
+## 6. Application identity and OS integration
+
+- [ ] The support matrix identifies which OS integration features are applicable; libraries and headless CLI tools are not forced to ship GUI launchers.
+- [ ] Application ID, display name, executable name, icon, package metadata, and user-data identity are consistent where appropriate; any identity change has an explicit upgrade/migration plan.
+- [ ] Required icons and metadata are included in the final artifact, not merely present in the source tree or build directory.
+- [ ] A GUI app is discoverable and launchable through the normal OS interface on each declared desktop/mobile target, and shows the intended icon/name.
+- [ ] Optional integrations (shortcuts, MIME/file associations, URI handlers, autostart, shell extensions, store publication) are included only when implemented and suitable; cleanup/uninstall behavior is checked.
+- [ ] Version, publisher/developer, license, project URL, and release metadata are accurate wherever the package format supports or requires them.
+- [ ] Validation evidence distinguishes static metadata validation from a real installed-package launch test.
+
+## 7. Installed artifact and runtime behavior
 
 Run the installed artifact from a working directory outside the source and build trees.
 
@@ -125,7 +146,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Shutdown and interrupted writes do not leave persistent data corrupt; atomic writes use staging on the destination filesystem.
 - [ ] Startup, shutdown, and long-running operations remain responsive or report progress; failures are visible and actionable.
 
-## 7. Paths, configuration, and CLI
+## 8. Paths, configuration, and CLI
 
 - [ ] Installed assets, user data, configuration, persistent state, cache, temporary files, and runtime files have distinct documented purposes.
 - [ ] CLI path options use the consistent vocabulary in `DESIGN.md`; deprecated aliases, if retained, are tested and documented.
@@ -138,7 +159,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Reset options clearly state their scope and do not remove saves or unrelated user data.
 - [ ] `--no-save`, if provided, disables all persistent gameplay/state writes covered by its documented meaning.
 
-## 8. Data safety, updates, and recovery
+## 9. Data safety, updates, and recovery
 
 - [ ] User data is kept separate from installed program files and replaceable cache data.
 - [ ] Critical writes preserve the previous valid file on failure; staging, replacement, and durability guarantees match the platform and filesystem as closely as practical.
@@ -151,7 +172,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Destructive actions are clearly identified and confirmed when data loss would be meaningful.
 - [ ] Backward/forward compatibility limits are documented; downgrade behavior is tested or explicitly unsupported.
 
-## 9. Extensions, mods, plugins, and add-ons
+## 10. Extensions, mods, plugins, and add-ons
 
 - [ ] The project documents whether extensions are supported, which types are allowed, and where they are discovered and installed.
 - [ ] Each supported extension type has a stable identifier and a documented metadata/version format.
@@ -163,7 +184,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] An extension can be disabled or removed without damaging unrelated data; startup recovery can bypass extensions if they prevent launch.
 - [ ] Updates that remove or change extension content handle dependent saves/projects explicitly.
 
-## 10. UI, accessibility, and interaction (all applicable applications)
+## 11. UI, accessibility, and interaction (all applicable applications)
 
 - [ ] Supported input modes are declared per target; essential operations are discoverable and reachable using every claimed mode.
 - [ ] Device events map to shared semantic actions where appropriate; switching input methods does not reset state, duplicate actions, or leave input stuck.
@@ -176,7 +197,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Destructive or irreversible actions are clearly named and are not triggered by ambiguous controls.
 - [ ] Accessibility features are documented and tested against the relevant project scope; applicable items from the Xbox Accessibility Guidelines or equivalent guidance are reviewed.
 
-## 11. Game-specific behavior (if applicable)
+## 12. Game-specific behavior (if applicable)
 
 Use [`GAME-DESIGN.md`](GAME-DESIGN.md) for the detailed checklist.
 
@@ -189,7 +210,7 @@ Use [`GAME-DESIGN.md`](GAME-DESIGN.md) for the detailed checklist.
 - [ ] Pause, quit, abort, restart, and destructive save/progression actions are distinct and behave predictably.
 - [ ] Audio/visual cues, subtitles, remapping, text size, contrast, motion and photosensitivity options are reviewed for relevance to the game.
 
-## 12. Console-style quality and lifecycle checks
+## 13. Console-style quality and lifecycle checks
 
 These are platform-independent quality checks inspired by public console certification requirements, not a claim of certification and not a substitute for the current requirements of any console/store. Apply the relevant checks to desktop, mobile, web, and handheld releases too.
 
@@ -206,7 +227,7 @@ These are platform-independent quality checks inspired by public console certifi
 - [ ] Fresh install, existing-user upgrade, no-save/no-profile, offline, low-storage, permission-denied, and corrupted-config scenarios are tested where relevant.
 - [ ] No critical crash, data-loss bug, softlock, inaccessible required flow, or severe rendering/input failure remains in the release candidate.
 
-## 13. Release and deployment hygiene
+## 14. Release and deployment hygiene
 
 - [ ] Artifact names identify project, version, and target.
 - [ ] Checksums and signatures are published or verified where required by the distribution channel.
@@ -218,7 +239,7 @@ These are platform-independent quality checks inspired by public console certifi
 - [ ] A post-deployment check verifies the published endpoint/artifact is reachable and corresponds to the intended revision.
 - [ ] A rollback/recovery procedure exists for deployment failures where the hosting/distribution system supports it.
 
-## 14. Evidence and sign-off
+## 15. Evidence and sign-off
 
 - [ ] Every required item is marked Pass or Fail; each N/A includes a reason.
 - [ ] Automated checks are linked to the flake output/job and their logs are retained as appropriate.

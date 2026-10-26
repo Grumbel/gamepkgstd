@@ -1,15 +1,15 @@
 # Cross-Platform Packaging Design Notes
 
-Reusable rules for packaging, paths, CLI, configuration, cross-compilation, extensions, versioning, and deployment across applications, games, libraries, command-line tools, and web projects. The initial examples came from several games, but the core contract is generic.
+Reusable rules for packaging, paths, CLI, configuration, cross-compilation, OS desktop/mobile integration, extensions, versioning, and deployment across applications, games, libraries, command-line tools, and web projects. The initial examples came from several games, but the core contract is generic.
 
 ## Contents
 
 | File | Purpose |
 |------|---------|
-| **DESIGN.md** | Generic build, path, CLI, configuration, extension, packaging, and Nix-first CI contract |
+| **DESIGN.md** | Generic build, path, CLI, configuration, OS integration, extension, packaging, and Nix-first CI contract |
 | **VERSION-HANDLING.md** | Rules for the top-level `VERSION` file, CMake and Nix |
 | **NIX-DEVELOP-SHELL.md** | Reusable `nix develop` out-of-tree CMake pattern |
-| **PACKAGING-CHECKLIST.md** | Sole compliance and release gate for native/cross builds, runtime smoke tests, extensions, CI, and target artifacts |
+| **PACKAGING-CHECKLIST.md** | Sole compliance and release gate for native/cross builds, runtime smoke tests, OS integration, extensions, CI, and target artifacts |
 | **LLM-IMPLEMENTATION-GUIDE.md** | Agent workflow for inspecting, fixing, testing, and reporting project compliance |
 | **GAME-DESIGN.md** | Optional game-specific shortcuts, controller, menu, and graphics guidance |
 | **AGENTS.md** | Session continuity, git-bundle delivery rules for agents |

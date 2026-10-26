@@ -82,6 +82,36 @@ Resizable layouts are the default where the platform supports them. Support wind
 - Make UI scale and content scale intentional and test at both the smallest supported screen and a larger desktop window. Do not rely on a 1080p/desktop-sized layout shrinking cleanly by accident.
 - For legacy/low-resolution targets, keep essential controls and text usable at the actual native resolution; if using a logical resolution such as 640×480, scale it to the target display without cropping or distorting the intended aspect ratio.
 
+### Application identity and operating-system integration
+
+Treat OS-facing application metadata as part of the shipped product, alongside the executable and runtime assets. Each target profile must state which integration surfaces it supports; a command-line tool or library does not need desktop-launcher assets unless it actually provides a GUI or user-facing launch target. Do not claim integration merely because source metadata exists: verify that the installed or packaged artifact contains it in the expected location and that the platform can consume it.
+
+Use one stable application identity across build metadata, package metadata, launchers, icons, and documentation where the platform permits it. Prefer a reverse-DNS identifier under a domain controlled by the project (for example, `org.example.AppName`); do not invent an identity based on a domain the project does not control. Keep the human-facing application name, executable name, package ID, and internal data-directory name distinct when their platform conventions require it. Renames and ID changes can break upgrades, settings migration, shortcuts, or store identity, so treat them as compatibility changes.
+
+Create a recognizable application icon from a source asset and generate the formats/sizes needed by each target. Keep launcher/app icons distinct from tiny in-app toolbar icons. Test icons at actual display sizes and against light/dark or masked backgrounds; do not ship only a large image if the platform expects a packaged icon resource. Avoid text in icons unless it remains legible at small sizes. Keep icon generation reproducible where practical and include the generated assets in the correct install/package artifact.
+
+#### Linux desktop
+
+For GUI applications, install a valid freedesktop `.desktop` entry in the applications directory and an icon in the standard icon/data layout (or another documented layout supported by the package format). Use a stable desktop-file ID, correct `Name`, `Exec`, and `Icon` values, and suitable `Categories`; add `Comment`, keywords, MIME types, actions, or terminal behavior only when accurate and useful. The `Exec` value must work after installation and must follow desktop-entry quoting/field-code rules; do not rely on the build tree, the caller's current directory, or an undeclared shell environment. A desktop entry is a launcher definition, not an arbitrary shell script.
+
+Provide AppStream metainfo (typically `metainfo.xml`) when the project is distributed through software catalogs or its packaging ecosystem benefits from it. Include accurate component identity, summary/description, project URL, license, developer information, launchable ID, and release metadata as applicable. Screenshots and translated metadata are useful additions, not substitutes for correct basic metadata. Validate the metainfo and desktop entry with available tools such as `appstreamcli` and `desktop-file-validate`; check icon resolution and test launching the installed package. Add MIME associations, URI handlers, D-Bus activation, or background/autostart integration only when the application genuinely implements that behavior. Do not register global handlers or autostart without a clear user-facing need.
+
+Install desktop entries and icons into the package's staging/install tree, not by editing the build host's desktop database. Nix packages, Flatpak packages, distro packages, and portable archives may have different staging conventions; follow the selected format while preserving standard paths within its exported filesystem. Libraries and headless CLI tools should not acquire a fake GUI launcher just to satisfy a generic checklist.
+
+#### Windows desktop
+
+For GUI applications, embed an appropriate multi-resolution `.ico` resource in the executable and set the native window/taskbar icon where the framework requires it. Include correct product/file version information, product name, publisher/company, copyright, and description resources where applicable. Ensure the icon appears in Explorer, taskbar, title bar, and installed shortcuts as appropriate; setting only a window icon may not set the executable's Explorer icon.
+
+If an installer or managed package is provided, create correctly named Start-menu shortcuts and optionally a desktop shortcut according to installer conventions and user choice. Make uninstall remove the integration that the installer created without deleting user data. Portable ZIP builds need not create shortcuts or registry entries, but should include a clear executable and documentation. File associations, protocol handlers, shell extensions, services, and startup entries are opt-in features: register them only when implemented, disclose the behavior, and provide a clean uninstall path.
+
+#### Android
+
+Treat the Android application ID, manifest label, launcher icon resources, version metadata, permissions, and signing configuration as release artifacts. Provide adaptive launcher icons for supported Android versions and the required fallback/legacy icon resources for the declared minimum API. Check foreground/background contrast and how the icon looks under different launcher masks. Keep the manifest label and visible app name consistent; avoid unnecessary permissions and exported components. Ensure the application ID is stable across updates because changing it generally creates a different app identity rather than an in-place upgrade. Keep signing secrets outside source control and reproducible build derivations; distinguish debug artifacts from signed release artifacts.
+
+#### Verification and scope
+
+Check integration in the final package, not just in the source tree. For GUI targets, verify that the application is discoverable and launchable through the normal platform UI, that the expected icon is shown, and that the launch works from a path/current directory different from the source tree. Verify version/publisher/package metadata where supported. For headless tools, validate relevant package metadata and help/version entry points without requiring a GUI. Mark store publication, signing, installers, and optional integrations as N/A when not part of the project's declared distribution model, and explain why rather than fabricating unused metadata.
+
 ### WebAssembly and browser-hosted applications
 
 Default to a non-Asyncify build when the program does not need synchronous-looking calls that wait for asynchronous JavaScript or yield back to the browser event loop. Add Asyncify only when required by the code/runtime design and test its code-size/performance cost. Emscripten also documents JSPI, which depends on support in the chosen browser/runtime and is not a universal replacement. Prefer event-driven/nonblocking integration when practical, especially for loading and persistence. Declare browser requirements and test startup, input, resize/focus, downloads, and persistence in a real browser.
@@ -286,6 +316,9 @@ At minimum, provide `--help` and `--version` where appropriate. Applications wit
 | Config / state directories | [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) |
 | Desktop integration | [Desktop Entry Specification](https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html) |
 | App metadata | [AppStream](https://www.freedesktop.org/software/appstream/docs/) |
+| Linux icon installation | [Icon Theme Specification](https://specifications.freedesktop.org/icon-theme-spec/latest/) |
+| Android app icons | [Android adaptive icons](https://developer.android.com/develop/ui/views/launch/icon_design_adaptive) |
+| Windows app icons | [Microsoft app icon guidance](https://learn.microsoft.com/en-us/windows/apps/design/iconography/app-icons) |
 | Versioning | [Semantic Versioning](https://semver.org/) |
 | PortMaster | https://portmaster.games/ (handheld packaging conventions) |
 | REUSE | https://reuse.software/ |
