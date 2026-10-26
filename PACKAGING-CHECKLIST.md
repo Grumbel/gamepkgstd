@@ -1,6 +1,6 @@
 # Cross-Platform Project Compliance Checklist
 
-Use this checklist as a release gate for projects following [`DESIGN.md`](DESIGN.md). It applies to games and other distributable software. For each item record **Pass**, **Fail**, or **N/A with a reason**. Do not mark an item passed merely because a build succeeds: record the command, target, and evidence for checks that matter. Platform-specific sections apply only to declared targets. Game-specific UX checks live in [`GAME-DESIGN.md`](GAME-DESIGN.md).
+Use this checklist as the sole compliance and release gate for projects following [`DESIGN.md`](DESIGN.md). It applies to games and other distributable software. For each item record **Pass**, **Fail**, **N/A with a reason**, or **Unknown** when evidence is insufficient. Do not mark an item passed merely because a build succeeds: record the command, target, and evidence for checks that matter. Platform-specific sections apply only to declared targets. Game-specific UX checks live in [`GAME-DESIGN.md`](GAME-DESIGN.md). For LLM-driven remediation, follow [`LLM-IMPLEMENTATION-GUIDE.md`](LLM-IMPLEMENTATION-GUIDE.md); do not edit away failed requirements to create an appearance of compliance.
 
 ## 1. Project contract and support matrix
 
@@ -8,6 +8,7 @@ Use this checklist as a release gate for projects following [`DESIGN.md`](DESIGN
 - [ ] Every required target has a declared artifact format, runtime requirements, and validation method.
 - [ ] Build, test, package, run, deploy, and clean commands are documented and work from a clean checkout.
 - [ ] Version source, release numbering, license, third-party notices, and asset licensing are defined.
+- [ ] A release is built from a clean, identified revision; dirty-tree builds are rejected or clearly treated as development builds.
 - [ ] Required and optional dependencies/features are explicit; accidental host discovery cannot silently change the product.
 
 ## 2. One-command Nix workflow
@@ -113,9 +114,12 @@ Run the installed artifact from a working directory outside the source and build
 ## 7. Data safety, updates, and recovery
 
 - [ ] User data is kept separate from installed program files and replaceable cache data.
+- [ ] Critical writes preserve the previous valid file on failure; staging, replacement, and durability guarantees match the platform and filesystem as closely as practical.
 - [ ] Saves/state have a versioning and migration strategy; updates do not silently overwrite data that cannot be read.
 - [ ] Interrupted saves, full disks, permission failures, and invalid/corrupt files are handled without avoidable data loss.
+- [ ] Recovery from an interrupted or partially completed write is tested where persistent data exists.
 - [ ] Uninstall/update behavior for user data is documented; uninstall does not unexpectedly delete user-created content.
+- [ ] Downgrade support or incompatibility is declared; older versions cannot silently overwrite or destroy newer user data.
 - [ ] A broken configuration or graphics setting can be reset without requiring the normal UI to start.
 - [ ] Destructive actions are clearly identified and confirmed when data loss would be meaningful.
 - [ ] Backward/forward compatibility limits are documented; downgrade behavior is tested or explicitly unsupported.
@@ -137,6 +141,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Essential operations are discoverable and reachable using every input method the project claims to support.
 - [ ] Focus, keyboard navigation, shortcuts, text entry, dialogs, and cancellation behave consistently.
 - [ ] UI text remains legible at supported sizes, scaling levels, resolutions, and display configurations.
+- [ ] Unicode paths/content and locale-sensitive formatting work where applicable; text input methods are tested on supported platforms.
 - [ ] Color is not the sole way important status or errors are communicated.
 - [ ] Error messages explain what failed and offer a useful next step where possible.
 - [ ] Long operations expose progress or a responsive cancel/stop path when practical.
@@ -177,8 +182,10 @@ These are platform-independent quality checks inspired by public console certifi
 - [ ] Checksums and signatures are published or verified where required by the distribution channel.
 - [ ] Debug symbols are retained or split out where practical; release artifacts do not accidentally include secrets or development-only assets.
 - [ ] License and third-party notices are shipped where required.
+- [ ] Third-party dependency sources, versions, and licenses are tracked; builds do not perform undeclared network fetches.
 - [ ] Release notes list user-visible changes, compatibility/migration notes, known issues, and supported targets.
 - [ ] Deployment publishes only artifacts built and tested for the current revision; failed jobs cannot leave a misleading partial release.
+- [ ] A post-deployment check verifies the published endpoint/artifact is reachable and corresponds to the intended revision.
 - [ ] A rollback/recovery procedure exists for deployment failures where the hosting/distribution system supports it.
 
 ## 13. Evidence and sign-off

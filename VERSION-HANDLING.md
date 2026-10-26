@@ -25,9 +25,10 @@ Roughly semver-compatible: `0.2.0-dev.1615` is a pre-release; `+gf1fb306` is bui
 ### Release process
 
 1. Set `VERSION` to the release number **without** `-dev` (e.g. `0.2.0`).
-2. Commit that change.
-3. Tag the tree as `v` + that number (e.g. `v0.2.0`). The tag must match `VERSION` with a `v` prefix.
-4. After the release, bump `VERSION` to the next `-dev` (e.g. `0.2.1-dev`) on the main branch.
+2. Commit that change in the intended release revision.
+3. Tag the clean release tree as `v` + that number (e.g. `v0.2.0`). The tag must match `VERSION` with a `v` prefix.
+4. Build and publish from that identified clean revision. Reject dirty working trees for release artifacts; if a dirty build is intentionally made for debugging, label it as a development artifact and do not publish it as the release.
+5. After the release, bump `VERSION` to the next `-dev` (e.g. `0.2.1-dev`) on the main branch.
 
 ---
 

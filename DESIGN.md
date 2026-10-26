@@ -2,19 +2,20 @@
 
 A reusable engineering and distribution contract for applications, games, libraries, command-line tools, and web projects. The goal is to make projects reproducibly buildable, testable, packageable, and deployable from one NixOS `flake.nix`, with GitHub Actions acting only as a thin invocation shim.
 
-These guidelines are informed by several game projects, but the shared document is not game-specific. Game controls, game menus, and game-specific graphics conventions live in [`GAME-DESIGN.md`](GAME-DESIGN.md). Projects should adopt applicable requirements, declare supported targets, and document justified exceptions rather than pretending every target is universally supported.
+These guidelines are informed by several game projects, but the shared contract applies to applications, games, libraries, command-line tools, and web projects. Game-only behavior lives in [`GAME-DESIGN.md`](GAME-DESIGN.md). For an LLM-driven remediation task, follow [`LLM-IMPLEMENTATION-GUIDE.md`](LLM-IMPLEMENTATION-GUIDE.md): inspect first, establish applicability, make evidence-backed changes, test them, and report what remains unverified. Do not treat every example or optional capability as a universal requirement.
 
 Related documents:
 
 - `VERSION-HANDLING.md` — version source and propagation.
 - `NIX-DEVELOP-SHELL.md` — reusable out-of-tree CMake development workflow.
-- `PACKAGING-CHECKLIST.md` — release and deployment gate.
+- `PACKAGING-CHECKLIST.md` — sole compliance and release gate.
+- `LLM-IMPLEMENTATION-GUIDE.md` — procedure for applying this contract to an existing repository.
 - `GAME-DESIGN.md` — optional game-specific UI/input guidance.
 - `AGENTS.md` — repository continuity and git-bundle handoff rules.
 
 ## 1. Goals and supported target profiles
 
-The default ambition for cross-platform interactive applications in this work line is one source tree and one authoritative flake capable of producing the applicable artifacts for:
+The reference target profile for cross-platform interactive applications in this work line is one source tree and one authoritative flake capable of producing the applicable artifacts for:
 
 | Target family | Expected output | Key constraint |
 |---|---|---|
@@ -24,7 +25,7 @@ The default ambition for cross-platform interactive applications in this work li
 | Desktop Linux | Nix package and/or portable distribution formats | Keep runtime dependencies and data lookup deterministic. |
 | WebAssembly | Browser-deployable site/artifact | Define browser requirements, storage model, and whether asynchronous JS integration is required. |
 
-This is a target ambition, not a claim that every project or dependency can support every target. Each repository must declare its actual support matrix, architecture, minimum OS/API, graphics backend, and test status. A target is supported only when its artifact is built and its runtime assumptions are checked.
+This reference profile is not a universal mandate. Each repository must declare its actual support matrix, architecture/ABI, minimum OS/API, relevant graphics/input backend, artifact format, and validation status. Targets may be excluded with a brief reason. A target is supported only when its artifact is built and its runtime assumptions are checked; a successful compile alone is insufficient.
 
 **One-click** means one documented flake entry point can build all required artifacts and checks for a project profile, and a documented deployment entry point can publish the outputs that are safe to publish. It does not mean every target binary can run on the build host, that credentials belong in the flake, or that hardware testing can always be automated.
 
@@ -64,9 +65,7 @@ A project should expose a small, discoverable interface, for example:
 
 Choose output names that fit Nix conventions and the flake's supported systems; the examples are an interface idea, not a requirement to create every spelling. Document the exact one-command build/test/deploy invocations in the README. A CI aggregate must explicitly depend on every required package: `nix flake check` does not by itself build every derivation under `packages`.
 
-GitHub Actions should only provision Nix and required features, configure optional binary caching, invoke the documented flake output, and upload/publish already-built artifacts. Workflow YAML must not own compiler flags, dependency lists, target matrices, or independent build/test steps. Secrets, signing keys, and deployment tokens remain in the CI secret store or deployment environment; they are not embedded in the flake or derivations.
-
-For websites, the flake should build the static site and, where practical, define the deploy operation using the same model as [the Kurvenrausch website repository](https://github.com/kurvenrausch/kurvenrausch.github.io). Deployment credentials and permissions remain external inputs. A deployment should publish a known build output, not rebuild the site with separate logic hidden in GitHub Actions.
+The detailed CI/deployment contract is in section 14. In short, CI invokes named flake outputs and may provision Nix, configure caching, inject credentials at deployment time, and upload/publish the already-built output. It must not maintain a second implementation of build or test logic. For a website, build the static site through the flake and publish that known output; see [the Kurvenrausch website repository](https://github.com/kurvenrausch/kurvenrausch.github.io) for a project reference.
 
 ## 3. Build-system independence and development workflow
 
@@ -218,44 +217,16 @@ Asset lookup must be deterministic. A typical order is: explicit `--data-dir`, d
 ---
 
 ## 5. Command-Line Interface
-A common application CLI vocabulary. Adopt only options that make sense for the program:
 
-```
-Usage: <application> [options]
+Use a small, documented CLI that is stable enough for scripts, launchers, tests, and support. Adopt only options that make sense for the program. The canonical path-option spellings are defined in section 4; option semantics, precedence, diagnostics, and suggested non-path options are defined in section 11.
 
-  -h, --help              Show this help
-  -v, --version           Print full version string and exit
-  --data-dir PATH         Override installed/read-only asset directory
-  --user-data-dir PATH    Override user-installed content directory
-  --config-dir PATH       Override preferences directory
-  --state-dir PATH        Override persistent state
-  --cache-dir PATH        Override re-creatable cache directory
-  --temp-dir PATH         Override scratch-file directory
-  --portable              Use the package-local writable profile, if supported
-  --show-paths            Print resolved paths and exit
-
-Developer / testing (do not write to the user config):
-  --diagnostics           Print useful runtime/build diagnostics
-  --no-save               Disable persistent application-state writes
-```
-
-CLI flags that set a preference should **override** the config file for that run but, by default, should **not** rewrite the file merely because the application starts. Track which settings were explicitly overridden in the parsed options structure so the distinction is explicit; a bitmask is not required.
-
-Make resolved paths (assets, user data, config, state, cache, temp, and runtime when applicable) available at debug log level or through `--show-paths`; this reduces support friction across desktop, sandboxed, portable, and embedded deployments.
+At minimum, provide `--help` and `--version` where appropriate. Applications with meaningful writable paths should provide a way to diagnose resolved paths, normally `--show-paths` or `--diagnostics`. CLI behavior must be deterministic, must not depend accidentally on the caller's working directory, and must not silently change saved preferences merely because an option was supplied at startup.
 
 ---
 
-## 6. Packaging and Distribution Checklist
-- [ ] `VERSION` file + CMake / Nix wiring (see `VERSION-HANDLING.md`)
-- [ ] Desktop entry + icon + AppStream metainfo
-- [ ] Man page (optional but cheap)
-- [ ] `nix build` produces the documented install/package layout; `nix run` works
-- [ ] Windows cross zip from the same flake
-- [ ] Handheld-specific package/launcher when that target is supported
-- [ ] Flatpak manifest (or link to Flathub) when the audience justifies it
-- [ ] REUSE.toml / SPDX headers
-- [ ] `--version` prints the full development or release string
-- [ ] Config and state directories created on first run; failures reported to stderr
+## 6. Compliance and release checklist
+
+[`PACKAGING-CHECKLIST.md`](PACKAGING-CHECKLIST.md) is the sole compliance and release checklist. Do not maintain a second copy of checklist items here. This document defines the requirements; the checklist records their applicability, pass/fail status, and evidence.
 
 ---
 
@@ -268,7 +239,7 @@ Make resolved paths (assets, user data, config, state, cache, temp, and runtime 
 | Versioning | [Semantic Versioning](https://semver.org/) |
 | PortMaster | https://portmaster.games/ (handheld packaging conventions) |
 | REUSE | https://reuse.software/ |
-| Nix flakes and `nix flake check` | https://nix.dev/manual/nix/2.18/command-ref/new-cli/nix3-flake-check |
+| Nix flakes and `nix flake check` | https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake-check |
 | Windows known folders | https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid |
 
 ---
@@ -281,6 +252,8 @@ Make resolved paths (assets, user data, config, state, cache, temp, and runtime 
 - Fail early when `PROJECT_SOURCE` / user directories cannot be resolved.
 - Mirror package-wrapper environment variables inside `nix develop`.
 - Document platform-specific path rules next to the code that implements them.
+- Track third-party dependency sources, versions, licenses, and required notices. Keep builds free of undeclared network fetches; define a process for updating dependencies and responding to known vulnerabilities.
+- Preserve Unicode paths and text. Use locale-aware formatting for user-facing numbers/dates where appropriate, and test text input methods and non-ASCII content on supported platforms.
 
 **Avoid**
 
@@ -293,7 +266,7 @@ Make resolved paths (assets, user data, config, state, cache, temp, and runtime 
 ---
 
 ## 9. Normative Levels and Project Profiles
-These notes describe a **shared baseline**, not a requirement to ship every platform or feature. Mark each rule in project-specific documentation as one of:
+These notes describe a **shared baseline**, not a requirement to ship every platform or feature. Apply MUST/SHOULD/MAY to project changes consistently. A project profile must state which target families and features are supported, which requirements apply, and why any SHOULD/MUST exception exists. Mark each rule in project-specific documentation as one of:
 
 - **MUST**: required for a supported build or release; deviations need an explicit reason.
 - **SHOULD**: the default recommendation; document a concrete reason when deviating.
@@ -314,7 +287,7 @@ Every project should declare its supported targets and input modes. Do not adver
 
 ### Release build expectations
 
-A release artifact should be reproducible from a clean checkout with documented commands. Record the source revision, version, target, build options, and artifact names. Keep debug symbols available where practical, either in the artifact or as a separate debug package. Do not strip symbols before extracting or preserving separate debug information.
+A release artifact MUST be produced from a clean, identified source revision (normally a release tag) with documented commands. Reject dirty release trees, or explicitly classify the output as a development build that cannot be published as a release. Record the source revision, version, target, build options, and artifact names. Keep debug symbols available where practical, either in the artifact or as a separate debug package. Do not strip symbols before extracting or preserving separate debug information.
 
 A release checklist should cover at least: clean configure/build, tests that are available, install-tree launch, version output, asset discovery, configuration/save directory creation, and a smoke test on each supported runtime family. Add signing, checksums, and reproducible-build verification where the distribution channel requires or supports them.
 
@@ -363,11 +336,11 @@ Do not expose every menu preference as a CLI option by default. Add flags when t
 - Add configuration migrations when key names or meanings change. Avoid changing a setting's meaning while retaining the same key. Ignore unknown keys where feasible so newer configs can be opened by older builds without destroying data.
 - Make directory-creation and write failures actionable: report the affected path and whether the application can continue without persistence. Never claim a save succeeded if the write failed.
 - Keep logs useful and bounded. Diagnostics should identify version/build, active backend when relevant, detected input devices where relevant, and resolved paths; avoid logging private data or full environment dumps by default.
-- Save atomically where practical: write a temporary file in the destination directory, flush/close it, then rename it into place. Handle interrupted or failed writes without truncating the last valid save.
-- For applications with suspend/background lifecycles, distinguish durable user progress from transient session/UI state. Persist durable state incrementally; define what is saved at suspend and what is restored at resume, activity recreation, or process restart. Lifecycle callbacks are opportunities to flush or release resources, not the only time data may be saved.
+- Save critical state atomically: write a temporary file in the destination directory, flush/close it, then replace the previous file. Where the platform/filesystem provides the needed primitives, ensure data and directory metadata are durably flushed. Handle interrupted or failed writes without truncating the last valid save; document any weaker guarantees.
+- Distinguish durable user data from transient session/UI state. Persist important durable state incrementally; define what is restored after suspend/resume, activity recreation, crash, or process restart. Lifecycle callbacks are opportunities to flush or release resources, not the only time data may be saved. Test interrupted writes, full storage, permission failures, and recovery from invalid or partially written files where persistence exists.
 
 ## 13. Extensions, Plugins, and User-Installed Content
-Plugins, extensions, themes, user scripts, custom content, and other add-ons are user-managed content, not shipped assets and not configuration. Keep them in the user-data category unless a specific platform requires a different physical layout.
+Plugins, extensions, themes, user scripts, custom content, and other add-ons are user-managed content, not shipped assets and not configuration. Keep them in the user-data category unless a specific platform requires a different physical layout. Upgrades must not silently overwrite user-created content; uninstall must not delete user data without clear, informed consent. Declare whether downgrades are supported and what happens when newer data cannot be read by an older version.
 
 - Define the supported add-on types and whether each is data-only or executable. Prefer declarative data formats. Do not treat arbitrary scripts, native libraries, or downloaded binaries as harmless content.
 - Keep built-in content, user-installed content, and temporary workshop/download staging separate. Shipped add-ons belong to the package; user-installed add-ons belong in the user-data directory; caches and incomplete downloads belong in cache/temp directories.
@@ -391,5 +364,5 @@ The Nix flake is the single source of truth for build, test, lint, package, cros
 - Document the same local commands that CI uses. A developer should be able to reproduce a failed CI check with `nix build` / `nix flake check` without reverse-engineering workflow YAML.
 - Avoid a second authoritative build script. Small GitHub workflow steps that install/configure Nix, select a flake output, or upload an already-built artifact are acceptable shims; build and test behavior belongs in the flake.
 
-## 15. Validation Checklist
-Use `PACKAGING-CHECKLIST.md` for the release gate and artifact matrix. A deliverable is not complete merely because it compiled: install it, run it outside the source/build tree where possible, verify assets and writable paths, and check version/diagnostics on the target runtime.
+## 15. Validation
+Use `PACKAGING-CHECKLIST.md` for the sole release gate and artifact matrix. A deliverable is not complete merely because it compiled: install it, run it outside the source/build tree where possible, verify assets and writable paths, and check version/diagnostics on the target runtime.
