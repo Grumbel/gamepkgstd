@@ -93,6 +93,33 @@ Persist every option that the player can change; do not reset debug toggles on e
 ---
 
 
+## Legacy ports and emulated games: overlay menus and save states
+
+Ports that preserve a game from another computer or console inherit assumptions from the original platform. Treat adaptation as part of the port, not as optional polish. The examples include [hostages-port](https://github.com/Grumbel/hostages-port), [fa18-interceptor-port](https://github.com/Grumbel/fa18-interceptor-port), and [turrican2-port](https://github.com/Grumbel/turrican2-port). Inspect each project's actual architecture and existing features before deciding what is feasible; a native port of an old game is not automatically an emulator and may not have a cheap way to capture its complete execution state.
+These three repositories illustrate different adaptation needs: Hostages documents a controller-accessible debug menu with save-state functions, Turrican II has a host-side overlay with ten state slots, and F/A-18 maps many original keyboard functions onto controller buttons and hold-layer menus. Treat these as implementation examples to inspect, not as proof that every feature is present or tested on every target.
+
+### In-game overlay menu
+
+- Provide an in-game, controller-navigable overlay or pause menu for platform, video, audio, input, and session actions that would otherwise require a physical keyboard. On a controller-first handheld such as the R36S, do not make essential options depend on pressing a keyboard key the device does not have.
+- Use the target's documented launcher/firmware conventions for opening the menu. Check for conflicts with PortMaster, ArkOS/dArkOS, SDL, emulator hotkeys, and the game's own controls. Do not assume one Function/Select/button chord is universal across firmware images or standalone emulators.
+- Keep the menu separate from gameplay input: opening it should pause or safely suspend gameplay, release held gameplay inputs, route input to the menu, and restore gameplay input cleanly on close. Avoid sending menu navigation presses through to the game.
+- Include the actions that actually apply to the port, such as Resume, audio/display options, control mapping, virtual keyboard (if legacy text entry or keyboard commands are needed), Save State/Load State when supported, Restart, Return to title, and Quit. Do not show unsupported actions as active. Confirm destructive actions such as restart, quit, or loading over valuable progress where appropriate.
+- Make the overlay readable at the target's real resolution, including the 640×480 R36S reference size. Preserve the game's aspect ratio and keep menu text, selection, and button hints legible over varied backgrounds. Avoid blocking more of the game than necessary; ensure the overlay can be operated with the primary controller and has a clear cancel/back path.
+- Provide a short controls/help view that explains the actual target-specific menu shortcut and button mapping. Keep this in the port's README as well; do not rely on undocumented key combinations.
+
+### Save states and restoration
+
+- First determine whether the project is an emulator, embeds an emulator core, or is a native port of the original game's code. Use an existing, tested emulator/core state API where one is genuinely available. For a native port, estimate and document the work needed to serialize the game state; do not promise save states merely because the original system had them.
+- Distinguish **save states** (resume a captured point in the running session) from **in-game saves/checkpoints** (the game's own supported persistence). Preserve the original save system where possible; do not silently replace or conflate the two.
+- A save state must capture all state required for deterministic, coherent restoration, not just visible game variables: include relevant simulation/CPU/memory state, timers, random-number generator state, audio sequencing, and other subsystems as applicable. Recreate renderer/device resources instead of serializing invalid GPU handles. Document any state that cannot be captured and resulting limitations.
+- Save to a documented per-game/user-data location, not the install directory or current working directory. Use named or numbered slots with clear save/load feedback. Keep manual saves distinct from any automatic resume slot, so autosave does not overwrite the user's deliberate saves.
+- Write snapshots transactionally: stage to a temporary file on the destination filesystem, validate/flush as appropriate, then atomically replace the target. Preserve the previous valid state if a save is interrupted or storage is full. Report failures instead of displaying false success.
+- Include enough metadata to identify the game/content, port/build or state format version, and required core/runtime where applicable. Validate before loading; reject incompatible/corrupt states safely and explain recovery. Do not promise state compatibility across versions unless it is deliberately implemented and tested.
+- Loading replaces the current running state and can discard unsaved progress. Make this explicit in the UI, confirm when the risk warrants it, and never delete or overwrite the game's ordinary save files as a side effect.
+- Test save/load in multiple situations: early and late gameplay, menus/transitions, active effects/audio, each supported slot, corrupted/truncated files, full or unwritable storage, and after restarting the application. Verify that restoration resumes correctly without duplicated input, stuck buttons, broken audio, or invalid graphics resources. If hardware testing is unavailable, report save-state behavior as unverified rather than passed.
+
+---
+
 ## Graphics and display settings
 
 - `Auto` should be the default for renderer/backend selection unless the game has one supported backend. Detect capabilities at runtime; do not infer GPU features solely from the OS or device name.

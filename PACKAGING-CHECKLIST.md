@@ -102,6 +102,13 @@ For every target marked supported in the support matrix:
 - [ ] The launcher contract, working directory, environment variables, runtime libraries, controls, display mode, and save location are documented.
 - [ ] Bundled libraries do not accidentally override incompatible system libraries; loader paths and environment changes are intentional.
 - [ ] The package installs, launches, exits, saves, and resumes correctly on the declared target hardware or a documented equivalent test setup.
+- [ ] A controller-operated in-game overlay/pause menu replaces essential keyboard-only options; its shortcut follows the target firmware/runtime conventions and is documented.
+- [ ] Overlay input is isolated from gameplay input; pause/resume and close/back behavior do not leave held buttons stuck or leak menu presses into gameplay.
+- [ ] Legacy keyboard-only commands/text entry have a documented handheld alternative or an explicit limitation (for example, a virtual keyboard where needed).
+- [ ] Save-state support is based on the actual architecture and a real state-capture API/implementation, not assumed from the original platform; unsupported features are not advertised.
+- [ ] Save states are distinct from ordinary game saves, use a documented writable location and slots, preserve manual slots from autosave, and report success/failure truthfully.
+- [ ] Save-state writes survive interruption safely; corrupt/incompatible states fail without damaging ordinary saves or the previous valid state.
+- [ ] Save/load is tested across gameplay and transitions, application restart, corrupt files, and storage errors where applicable; untested hardware behavior is marked Unknown.
 
 ## 6. Installed artifact and runtime behavior
 
