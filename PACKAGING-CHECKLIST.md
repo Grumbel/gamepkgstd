@@ -55,6 +55,11 @@ For every target marked supported in the support matrix:
 - [ ] Minimum Android API level and supported ABIs are explicit; API 21 / Android 5.0 is the baseline only when claimed by the project.
 - [ ] Manifest, package metadata, permissions, native libraries, assets, and signing are handled by the documented release workflow.
 - [ ] Storage follows Android's sandbox and scoped-storage model; pause/resume, activity recreation, and process death do not corrupt persistent data.
+- [ ] Durable progress is persisted incrementally; correctness does not depend on receiving `onPause`, `onStop`, or another final callback before process death.
+- [ ] Transient session/UI state and durable progress are distinguished; returning after backgrounding or activity recreation restores the expected screen, selection, scroll/position, and in-progress work where applicable.
+- [ ] Resume/recreation does not duplicate submissions, purchases, network requests, input events, timers, audio playback, or save operations.
+- [ ] Graphics surfaces/contexts and other lifecycle-bound resources are recreated after loss; audio, input, networking, and background work are paused, resumed, or cancelled according to a documented policy.
+- [ ] Lifecycle behavior is tested by backgrounding and resuming, recreating the activity where applicable, and killing the background process before reopening; recovery is verified on the minimum supported Android version and a current version.
 - [ ] VR applications declare their separate device/API requirements instead of inheriting the ordinary Android baseline.
 
 ### WebAssembly
@@ -158,6 +163,7 @@ These are platform-independent quality checks inspired by public console certifi
 - [ ] Every essential menu and flow is operable with the primary supported input device; focus is visible and navigation has no dead ends.
 - [ ] Settings take effect immediately when promised and remain correct after restart when persistent.
 - [ ] Closing, suspending, backgrounding, losing focus, sleeping, and resuming do not cause crashes, hangs, duplicate actions, or avoidable loss of progress.
+- [ ] Where the platform can terminate a suspended process without a final callback, important state is already durable; resume restores the documented point in the workflow rather than merely restarting blindly. Session/UI restoration and durable saves have distinct, tested contracts.
 - [ ] Network/service failure, offline startup, timeout, and reconnection are handled gracefully when networking exists; unavailable optional services do not make unrelated offline features unusable.
 - [ ] Saves and settings remain associated with the correct user/profile where profiles exist; switching users does not leak or overwrite another user's data.
 - [ ] Updates preserve compatible saves and user content; version transitions are tested with data created by the previous released version.
