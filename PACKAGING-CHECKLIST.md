@@ -137,7 +137,17 @@ For every target marked supported in the support matrix:
 - [ ] Version, publisher/developer, license, project URL, and release metadata are accurate wherever the package format supports or requires them.
 - [ ] Validation evidence distinguishes static metadata validation from a real installed-package launch test.
 
-## 7. Installed artifact and runtime behavior
+## 7. Man pages and user documentation
+
+- [ ] Every installed, user-facing executable has a maintained man page, including GUI applications and games; internal build-only scripts are excluded unless exposed as supported commands.
+- [ ] Pages use appropriate sections (normally 1 for commands/apps, 5 for configuration/data formats, 3 for public library APIs) and are installed under the standard man directory on Unix-like targets.
+- [ ] Pages document actual invocation, options/subcommands, environment variables, relevant paths, exit behavior, examples, and destructive actions; no placeholder/stub pages.
+- [ ] `--help` and man pages agree with implemented behavior; option and configuration changes update the documentation and tests together.
+- [ ] Man pages are built/installed by the authoritative flake/package workflow, and the final package contains them where applicable.
+- [ ] Non-Unix releases retain the maintained documentation source and provide readable documentation appropriate to that artifact; lack of a native man viewer is not treated as a failure.
+- [ ] Validation checks page presence and section/path correctness, and uses a formatter/linter or renders pages when available.
+
+## 8. Installed artifact and runtime behavior
 
 Run the installed artifact from a working directory outside the source and build trees.
 
@@ -150,7 +160,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Shutdown and interrupted writes do not leave persistent data corrupt; atomic writes use staging on the destination filesystem.
 - [ ] Startup, shutdown, and long-running operations remain responsive or report progress; failures are visible and actionable.
 
-## 8. Paths, configuration, and CLI
+## 9. Paths, configuration, and CLI
 
 - [ ] Installed assets, user data, configuration, persistent state, cache, temporary files, and runtime files have distinct documented purposes.
 - [ ] CLI path options use the consistent vocabulary in `DESIGN.md`; deprecated aliases, if retained, are tested and documented.
@@ -163,7 +173,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Reset options clearly state their scope and do not remove saves or unrelated user data.
 - [ ] `--no-save`, if provided, disables all persistent gameplay/state writes covered by its documented meaning.
 
-## 9. Data safety, updates, and recovery
+## 10. Data safety, updates, and recovery
 
 - [ ] User data is kept separate from installed program files and replaceable cache data.
 - [ ] Critical writes preserve the previous valid file on failure; staging, replacement, and durability guarantees match the platform and filesystem as closely as practical.
@@ -176,7 +186,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Destructive actions are clearly identified and confirmed when data loss would be meaningful.
 - [ ] Backward/forward compatibility limits are documented; downgrade behavior is tested or explicitly unsupported.
 
-## 10. Extensions, mods, plugins, and add-ons
+## 11. Extensions, mods, plugins, and add-ons
 
 - [ ] The project documents whether extensions are supported, which types are allowed, and where they are discovered and installed.
 - [ ] Each supported extension type has a stable identifier and a documented metadata/version format.

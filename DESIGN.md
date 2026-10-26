@@ -183,6 +183,14 @@ share/metainfo/<app>.appdata.xml  (or .metainfo.xml)
 share/man/man1/<app>.1 (or the appropriate section)
 ```
 
+### Man pages are part of the application interface
+
+Every installed, user-facing executable must have a maintained man page, including GUI applications, games, command-line tools, and project-provided helper commands. A GUI application still needs a page describing how to launch it, supported options, environment variables, path overrides, diagnostics, and relevant runtime behavior; `--help`, a README, or an online website is not a substitute. Document each substantial subcommand separately when that makes the interface easier to navigate, and link it from the parent command page.
+
+Use the conventional section for the documented interface: section 1 for user commands and applications, section 5 for configuration and data-file formats, and section 3 for public library APIs. Use another standard section only when it genuinely fits. Every command-line option, environment variable, configuration key, exit status, and file path that users or scripts are expected to rely on should be documented accurately. Include examples for common tasks and explain destructive operations and data locations. Keep man pages synchronized with actual behavior and tests; do not generate a misleading stub merely to satisfy packaging checks.
+
+Build and install man pages through the authoritative build/package workflow. On Linux and other Unix-like packages, install them under the standard `share/man/man<section>/` hierarchy and ensure compression/indexing is handled by the package manager or distribution convention where applicable. For Windows, Android, and web releases, retain the same maintained documentation source and include an appropriate readable documentation format when useful; the Unix `man` viewer itself is not a platform requirement. Internal build-only scripts and non-user-facing implementation details do not need separate man pages unless they are deliberately exposed as supported commands.
+
 Produce the formats applicable to the declared support profile, for example:
 
 - Linux desktop metadata (desktop entry, icons, AppStream)
@@ -300,7 +308,7 @@ Asset lookup must be deterministic. A typical order is: explicit `--data-dir`, d
 
 Use a small, documented CLI that is stable enough for scripts, launchers, tests, and support. Adopt only options that make sense for the program. The canonical path-option spellings are defined in section 4; option semantics, precedence, diagnostics, and suggested non-path options are defined in section 11.
 
-At minimum, provide `--help` and `--version` where appropriate. Applications with meaningful writable paths should provide a way to diagnose resolved paths, normally `--show-paths` or `--diagnostics`. CLI behavior must be deterministic, must not depend accidentally on the caller's working directory, and must not silently change saved preferences merely because an option was supplied at startup.
+At minimum, provide `--help` and `--version` where appropriate. Every installed user-facing executable must also have a maintained man page, even if it is a GUI application with few options; the page documents its real invocation, options, environment, paths, and behavior. Keep `--help` concise and useful for immediate discovery, and keep the man page as the fuller reference rather than treating either as a replacement for the other. Applications with meaningful writable paths should provide a way to diagnose resolved paths, normally `--show-paths` or `--diagnostics`. CLI behavior must be deterministic, must not depend accidentally on the caller's working directory, and must not silently change saved preferences merely because an option was supplied at startup.
 
 ---
 

@@ -4,7 +4,7 @@
 
 - Base commit: `21382b841669253dac16c4a6d584384df46534a6`
 - Current goal: maintain a generic, LLM-actionable contract for cross-platform packaging/runtime behavior and a separate evidence-based compliance gate.
-- Latest completed change: Linux/Android/Windows application identity, icons, launcher/package metadata, and validation requirements; see the latest commit and `DESIGN.md`.
+- Latest completed change: man pages are required for every installed user-facing executable, including GUI applications and games, with appropriate sections, package installation, and cross-platform documentation handling; see the latest commit and `DESIGN.md`.
 - Deliver a cumulative git bundle from the original base commit, following `AGENTS.md`.
 
 ## Current document roles
@@ -18,7 +18,7 @@
 
 ## Remaining follow-up ideas
 
-- Validate the new OS integration guidance against actual Linux package formats, Android APK/AAB packaging, and Windows portable/installer outputs; distinguish static metadata checks from UI launch tests.
+- Validate the OS integration and man-page guidance against actual Linux package formats, Android APK/AAB packaging, and Windows portable/installer outputs; distinguish static metadata checks from UI launch tests.
 
 - Validate the conventions against current reference-project implementations and link to concrete examples.
 - Validate the Nix-first CI contract against reference-project flakes; do not claim target builds or device tests without running them.
