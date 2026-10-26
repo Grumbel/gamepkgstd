@@ -34,6 +34,8 @@ For each failure or unknown, record the relevant file/symbol, observed behavior,
 
 ### 3. Plan a bounded implementation
 
+Before proposing a new framework or replacing a library, check the language/library guidance in `DESIGN.md` against the real support matrix. Verify SDL2/SDL3 availability for PortMaster, legacy SDL1.2 and OLPC XO-1/X11 constraints where relevant, the rationale for Qt versus GTK in desktop GUIs, and actual low-resolution/resizing behavior. Do not migrate solely for modernity; account for runtime availability, footprint, porting effort, and target tests.
+
 Group related fixes into small stages, for example:
 
 1. Build and CI reproducibility.

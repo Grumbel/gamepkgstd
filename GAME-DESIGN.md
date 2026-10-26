@@ -28,7 +28,7 @@ Treat these as suggested defaults, not universal requirements. Preserve establis
 
 ## Gamepad and joystick handling
 
-- Use SDL2 (or SDL3) game-controller API; prefer the **GameController** abstraction over raw Joystick for consistent button names (A/B/X/Y, triggers, sticks).
+- Use the SDL2 GameController API by default when PortMaster/R36S is in the support matrix; prefer the **GameController** abstraction over raw Joystick for consistent button names (A/B/X/Y, triggers, sticks). Use SDL3 only when each required target runtime is explicitly supported and tested. See `DESIGN.md` for legacy SDL1.2 and OLPC XO-1/X11 guidance.
 - Provide a **rebind UI** that stores bindings in the config file (kurvenrausch / dualthrust pattern: `key_<action> …` / `pad_<action> …` lines).
 - Default mappings should work out-of-the-box for Xbox-style and PlayStation-style pads; document R36S / PortMaster button layout in the port README.
 - Support simultaneous keyboard + gamepad; last input wins for focus, both can generate events.
@@ -85,6 +85,7 @@ Persist every option that the player can change; do not reset debug toggles on e
 - A fullscreen/resolution change that could leave the display unusable should have a confirmation/revert flow when the platform allows it. Revert automatically after a short timeout unless confirmed. Where such a flow is not feasible, provide a documented reset path such as a safe-mode command-line flag or removal of the relevant config entry.
 - Prefer borderless desktop fullscreen by default on desktop platforms unless exclusive fullscreen is needed. Respect the platform's available display modes and windowing model; web and handheld targets may expose fewer controls.
 - Distinguish internal render resolution, window size, display resolution, pixel scaling, and UI scale. Do not label one as another. Preserve aspect ratio by default for pixel-art or fixed-aspect games; make stretching an explicit choice if offered.
+- Make the desktop window resizable where supported and update rendering, layout, and pointer/controller coordinate mapping after every resize. Reflow menus and settings instead of clipping them. Handheld screens are fixed-size, so test at their actual native resolution; 640×480 is a useful ArkOS/R36S reference, not a universal assumption.
 - VSync and frame-rate limits should have predictable interaction. Explain whether the cap applies to simulation, rendering, or both. Avoid presenting an FPS cap as a fix for simulation timing bugs.
 - Graphics settings should be persisted only after successful application when possible. If a change fails, restore the previous working value in both runtime state and the UI.
 - Include a way to reset graphics settings without requiring a successful graphical startup. A `--safe-mode` or `--reset-video-settings` option is useful when the normal menu cannot be reached.

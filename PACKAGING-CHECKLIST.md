@@ -25,7 +25,16 @@ Use this checklist as the sole compliance and release gate for projects followin
 - [ ] Any `--all-systems` use matches the intended coverage; target executables are only claimed runtime-tested when run on suitable hardware or an explicitly configured emulator.
 - [ ] Build and deployment steps fail clearly on errors; a failed build cannot publish stale artifacts as if they were current.
 
-## 3. Native builds and cross-compilation
+## 3. Language and library choices
+
+- [ ] Language and major libraries fit the declared support matrix; the reason for target-specific exceptions is documented.
+- [ ] C++ is used by default for native interactive projects unless a concrete project/target reason supports another language.
+- [ ] SDL2 is used as the default game/input layer when R36S/PortMaster compatibility is required; any SDL3 choice has explicit runtime/dependency evidence and target testing.
+- [ ] SDL1.2 legacy targets (including GP2X/Wiz-era systems) and OLPC XO-1's SDL/X11 options are evaluated against their actual APIs and performance limits.
+- [ ] Conventional desktop GUI framework choice is deliberate; Qt is the default in this project family, and GTK or another framework has a concrete justification if selected.
+- [ ] Resizing, viewport changes, UI scale, aspect ratio, and minimum supported resolution are tested; low-resolution handhelds are not assumed to support desktop-sized layouts.
+
+## 4. Native builds and cross-compilation
 
 - [ ] Native clean build and applicable tests succeed.
 - [ ] Cross-builds use explicit target systems, toolchains/sysroots, and target dependencies.
@@ -36,7 +45,7 @@ Use this checklist as the sole compliance and release gate for projects followin
 - [ ] Tests that cannot run on the build host are marked as requiring emulation, a device, or manual validation, not falsely reported as passed.
 - [ ] Release metadata records source revision, version, target, configuration, and artifact names.
 
-## 4. Target coverage and deployment
+## 5. Target coverage and deployment
 
 For every target marked supported in the support matrix:
 
@@ -88,12 +97,13 @@ For every target marked supported in the support matrix:
 
 ### R36S / PortMaster / ArkOS / dArkOS and similar handhelds
 
+- [ ] SDL2/SDL3 runtime assumptions are explicit and tested on the target firmware; 640×480 is treated as a reference size, not a hard-coded universal display mode.
 - [ ] Supported device/firmware combinations and CPU architecture/ABI are documented and verified; names alone are not treated as proof of compatibility.
 - [ ] The launcher contract, working directory, environment variables, runtime libraries, controls, display mode, and save location are documented.
 - [ ] Bundled libraries do not accidentally override incompatible system libraries; loader paths and environment changes are intentional.
 - [ ] The package installs, launches, exits, saves, and resumes correctly on the declared target hardware or a documented equivalent test setup.
 
-## 5. Installed artifact and runtime behavior
+## 6. Installed artifact and runtime behavior
 
 Run the installed artifact from a working directory outside the source and build trees.
 
@@ -106,7 +116,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Shutdown and interrupted writes do not leave persistent data corrupt; atomic writes use staging on the destination filesystem.
 - [ ] Startup, shutdown, and long-running operations remain responsive or report progress; failures are visible and actionable.
 
-## 6. Paths, configuration, and CLI
+## 7. Paths, configuration, and CLI
 
 - [ ] Installed assets, user data, configuration, persistent state, cache, temporary files, and runtime files have distinct documented purposes.
 - [ ] CLI path options use the consistent vocabulary in `DESIGN.md`; deprecated aliases, if retained, are tested and documented.
@@ -119,7 +129,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Reset options clearly state their scope and do not remove saves or unrelated user data.
 - [ ] `--no-save`, if provided, disables all persistent gameplay/state writes covered by its documented meaning.
 
-## 7. Data safety, updates, and recovery
+## 8. Data safety, updates, and recovery
 
 - [ ] User data is kept separate from installed program files and replaceable cache data.
 - [ ] Critical writes preserve the previous valid file on failure; staging, replacement, and durability guarantees match the platform and filesystem as closely as practical.
@@ -132,7 +142,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Destructive actions are clearly identified and confirmed when data loss would be meaningful.
 - [ ] Backward/forward compatibility limits are documented; downgrade behavior is tested or explicitly unsupported.
 
-## 8. Extensions, mods, plugins, and add-ons
+## 9. Extensions, mods, plugins, and add-ons
 
 - [ ] The project documents whether extensions are supported, which types are allowed, and where they are discovered and installed.
 - [ ] Each supported extension type has a stable identifier and a documented metadata/version format.
@@ -144,7 +154,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] An extension can be disabled or removed without damaging unrelated data; startup recovery can bypass extensions if they prevent launch.
 - [ ] Updates that remove or change extension content handle dependent saves/projects explicitly.
 
-## 9. UI, accessibility, and interaction (all applicable applications)
+## 10. UI, accessibility, and interaction (all applicable applications)
 
 - [ ] Essential operations are discoverable and reachable using every input method the project claims to support.
 - [ ] Focus, keyboard navigation, shortcuts, text entry, dialogs, and cancellation behave consistently.
@@ -156,7 +166,7 @@ Run the installed artifact from a working directory outside the source and build
 - [ ] Destructive or irreversible actions are clearly named and are not triggered by ambiguous controls.
 - [ ] Accessibility features are documented and tested against the relevant project scope; applicable items from the Xbox Accessibility Guidelines or equivalent guidance are reviewed.
 
-## 10. Game-specific behavior (if applicable)
+## 11. Game-specific behavior (if applicable)
 
 Use [`GAME-DESIGN.md`](GAME-DESIGN.md) for the detailed checklist.
 
@@ -167,7 +177,7 @@ Use [`GAME-DESIGN.md`](GAME-DESIGN.md) for the detailed checklist.
 - [ ] Pause, quit, abort, restart, and destructive save/progression actions are distinct and behave predictably.
 - [ ] Audio/visual cues, subtitles, remapping, text size, contrast, motion and photosensitivity options are reviewed for relevance to the game.
 
-## 11. Console-style quality and lifecycle checks
+## 12. Console-style quality and lifecycle checks
 
 These are platform-independent quality checks inspired by public console certification requirements, not a claim of certification and not a substitute for the current requirements of any console/store. Apply the relevant checks to desktop, mobile, web, and handheld releases too.
 
@@ -184,7 +194,7 @@ These are platform-independent quality checks inspired by public console certifi
 - [ ] Fresh install, existing-user upgrade, no-save/no-profile, offline, low-storage, permission-denied, and corrupted-config scenarios are tested where relevant.
 - [ ] No critical crash, data-loss bug, softlock, inaccessible required flow, or severe rendering/input failure remains in the release candidate.
 
-## 12. Release and deployment hygiene
+## 13. Release and deployment hygiene
 
 - [ ] Artifact names identify project, version, and target.
 - [ ] Checksums and signatures are published or verified where required by the distribution channel.
@@ -196,7 +206,7 @@ These are platform-independent quality checks inspired by public console certifi
 - [ ] A post-deployment check verifies the published endpoint/artifact is reachable and corresponds to the intended revision.
 - [ ] A rollback/recovery procedure exists for deployment failures where the hosting/distribution system supports it.
 
-## 13. Evidence and sign-off
+## 14. Evidence and sign-off
 
 - [ ] Every required item is marked Pass or Fail; each N/A includes a reason.
 - [ ] Automated checks are linked to the flake output/job and their logs are retained as appropriate.

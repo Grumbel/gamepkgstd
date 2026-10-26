@@ -4,7 +4,7 @@
 
 - Base commit: `21382b841669253dac16c4a6d584384df46534a6`
 - Current goal: maintain a generic, LLM-actionable contract for cross-platform packaging/runtime behavior and a separate evidence-based compliance gate.
-- Latest completed change: see the latest commit and `LLM-IMPLEMENTATION-GUIDE.md`.
+- Latest completed change: library/language selection, legacy platform graphics backends, SDL runtime compatibility, and low-resolution/resizable UI guidance; see the latest commit and `LLM-IMPLEMENTATION-GUIDE.md`.
 - Deliver a cumulative git bundle from the original base commit, following `AGENTS.md`.
 
 ## Current document roles
