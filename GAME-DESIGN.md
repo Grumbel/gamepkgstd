@@ -40,6 +40,22 @@ For multi-player (SuperTux local multiplayer, KugelMatch 2P) keep per-player bin
 ---
 
 
+## Input modes: touchscreen, mouse, keyboard, and gamepad
+
+Declare the input methods supported on each target in the support matrix. Do not claim universal support just because the underlying library can detect a device. Choose a sensible primary method for each target, then make secondary methods work where they materially improve usability. Keep game actions independent of device events: map keyboard keys, pointer/touch actions, and controller buttons to shared semantic actions so that gameplay rules are not duplicated per device.
+
+- **Keyboard:** provide predictable defaults and an in-game controls/help screen. Menus and dialogs must be keyboard-navigable, focus must be visible, and text-entry fields must retain normal typing behavior. Avoid capturing global shortcuts while the user is typing.
+- **Mouse:** support pointer targeting, hover only as an enhancement, mouse-wheel/scroll behavior where useful, and normal window interactions. Essential actions must not depend on hover or a precise tiny hit target. Keep pointer coordinates correct after resizing, DPI changes, or render-scale changes.
+- **Touchscreen:** design for direct finger interaction, with sufficiently large, separated targets and no hover-only affordances. Avoid requiring right-click, keyboard modifiers, or precise pixel hunting. Provide visible alternatives for important hover/context actions and make drag operations cancellable. Use native gestures only when discoverable and provide buttons or other alternatives for essential actions. Prevent accidental page scrolling or browser gestures only during active interactions that need it; do not disable zoom or normal scrolling globally. Add virtual on-screen controls for games only when the game needs them, and make them unobtrusive, configurable where practical, and safe around device cutouts.
+- **Gamepad/joystick:** all essential menus and gameplay flows must work with the supported controller. Provide clear focus/selection, logical back/cancel behavior, usable defaults, and rebinding where appropriate. Handle hot-plug, disconnects, dead zones, analog ranges, and controller-specific labels. Do not require a mouse to dismiss a dialog or recover from a settings mistake.
+- **Mixed input:** allow keyboard, mouse, touch, and gamepad input to coexist when supported. Switching devices must not reset focus, lose progress, duplicate an action, or leave a key/button stuck. Update prompts to match the last active or currently relevant device when practical, but avoid rapidly flickering prompts due to incidental axis noise.
+- **Text and accessibility:** use platform text-input APIs for Unicode and input methods rather than treating text as ordinary key presses. Do not rely on color, sound, vibration, or a gesture alone to communicate an essential state or action. Make remapping and accessibility settings available through the primary input method.
+- **Do not overbuild:** a desktop game need not invent touch controls, and a touchscreen app need not expose a full gamepad scheme, unless those modes are in its support contract. Prefer a complete, coherent primary mode over several half-working modes.
+
+Test each declared input method from startup through menus, active use, pause/dialogs, settings/rebinding, and exit. Also test switching between methods mid-session and the loss/disconnection of a device where relevant. Document unsupported combinations rather than leaving them accidentally broken.
+
+---
+
 ## Menu structure and options
 
 A practical menu skeleton to adapt to the game’s actual modes and features:

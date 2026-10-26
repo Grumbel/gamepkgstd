@@ -40,7 +40,7 @@ Group related fixes into small stages, for example:
 
 1. Build and CI reproducibility.
 2. Runtime paths, configuration, and persistence safety.
-3. Platform lifecycle, input, graphics, and packaging behavior.
+3. Platform lifecycle, input, graphics, and packaging behavior. For input, verify the declared keyboard/mouse/touch/gamepad modes per target, then test each through essential workflows; do not treat device detection as proof of usable support. Keep semantic actions separate from device events and avoid broad input rewrites without evidence.
 4. Extensions, diagnostics, accessibility, and documentation.
 
 Adapt the order to the project's actual risks. Avoid broad rewrites when a focused fix is safer. If a requirement is ambiguous or conflicts with established project behavior, document the conflict and choose the least destructive compatible solution; ask the user when the decision is consequential and cannot be inferred safely.

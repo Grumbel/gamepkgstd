@@ -156,8 +156,9 @@ Run the installed artifact from a working directory outside the source and build
 
 ## 10. UI, accessibility, and interaction (all applicable applications)
 
-- [ ] Essential operations are discoverable and reachable using every input method the project claims to support.
-- [ ] Focus, keyboard navigation, shortcuts, text entry, dialogs, and cancellation behave consistently.
+- [ ] Supported input modes are declared per target; essential operations are discoverable and reachable using every claimed mode.
+- [ ] Device events map to shared semantic actions where appropriate; switching input methods does not reset state, duplicate actions, or leave input stuck.
+- [ ] Keyboard focus/navigation, mouse targeting, touchscreen hit targets/gestures, controller navigation, text entry, dialogs, and cancellation work for the modes actually supported.
 - [ ] UI text remains legible at supported sizes, scaling levels, resolutions, and display configurations.
 - [ ] Unicode paths/content and locale-sensitive formatting work where applicable; text input methods are tested on supported platforms.
 - [ ] Color is not the sole way important status or errors are communicated.
@@ -170,7 +171,9 @@ Run the installed artifact from a working directory outside the source and build
 
 Use [`GAME-DESIGN.md`](GAME-DESIGN.md) for the detailed checklist.
 
-- [ ] The game is playable using its declared primary input method, including menus and recovery flows.
+- [ ] The game is playable using each declared input method through startup, menus, gameplay, pause/dialogs, settings, and exit.
+- [ ] Touch targets are usable without hover or precise pointer input; essential actions do not depend on gestures alone.
+- [ ] Keyboard, mouse, touch, and controller can be mixed where claimed without stuck input, duplicate actions, or lost focus/state.
 - [ ] Settings reflect the mode actually applied; unsupported graphics modes cannot appear active.
 - [ ] Renderer/display changes recover from failure or provide a documented safe reset path.
 - [ ] Controller disconnect/reconnect and rebinding cancellation do not leave input stuck or lose previous bindings.

@@ -310,7 +310,7 @@ These notes describe a **shared baseline**, not a requirement to ship every plat
 - **SHOULD**: the default recommendation; document a concrete reason when deviating.
 - **MAY**: optional capability, implemented only when it fits the project.
 
-Every project should declare its supported targets and input modes. Do not advertise a target merely because its toolchain can compile the code. A project can have a small desktop profile and add Windows, web, Android, or handheld profiles later.
+Every project should declare its supported targets and input modes (keyboard, mouse, touchscreen, gamepad, or other relevant devices) per target. Do not advertise a target merely because its toolchain can compile the code, or claim an input mode merely because the library detects it. Keep device events separate from semantic application/game actions, and test the declared modes through essential workflows. A project can have a small desktop profile and add Windows, web, Android, or handheld profiles later.
 
 ## 10. Build and Cross-Compilation Rules
 - Keep configure, build, test, install, and package steps separable. The package must be built from an explicit source revision and must not depend on files in the developer's home directory.
