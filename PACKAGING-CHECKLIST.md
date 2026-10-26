@@ -120,6 +120,10 @@ For every target marked supported in the support matrix:
 - [ ] Legacy keyboard-only commands/text entry have a documented handheld alternative or an explicit limitation (for example, a virtual keyboard where needed).
 - [ ] Save-state support is based on the actual architecture and a real state-capture API/implementation, not assumed from the original platform; unsupported features are not advertised.
 - [ ] Save states are distinct from ordinary game saves, use a documented writable location and slots, preserve manual slots from autosave, and report success/failure truthfully.
+- [ ] Save/Load State is grouped in a submenu rather than crowding the overlay root menu; Load State and Save State each open a controller-navigable, scrollable slot list.
+- [ ] Load State lists existing loadable states; Save State lists existing slots plus an explicit New Save Slot action.
+- [ ] Overwriting an existing state requires explicit confirmation that identifies the slot; cancel leaves the prior state intact. Creating a new slot never silently overwrites another manual save.
+- [ ] Slot lists remain usable beyond one screenful, keep selection visible while scrolling, distinguish empty/incompatible entries, and provide consistent Back/Cancel behavior and operation feedback.
 - [ ] Save-state writes survive interruption safely; corrupt/incompatible states fail without damaging ordinary saves or the previous valid state.
 - [ ] Save/load is tested across gameplay and transitions, application restart, corrupt files, and storage errors where applicable; untested hardware behavior is marked Unknown.
 
