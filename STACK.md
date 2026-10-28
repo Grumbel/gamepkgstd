@@ -27,5 +27,5 @@ game.
 `FetchContent`, `ExternalProject` downloads or other network access during the
 build.
 
-**STACK-9.** New games are GPL-3.0-or-later with REUSE-compliant SPDX headers.
-Existing games keep their license.
+**STACK-9.** The license is the project's choice. Every file carries SPDX
+headers (or a `REUSE.toml` entry) and `reuse lint` passes (FLAKE-11).

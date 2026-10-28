@@ -20,9 +20,11 @@ Linux. It is used unchanged as:
 expected and is not a reason to change the ID.
 
 Where a dotted ID is required (Android `applicationId`), use
-`org.grumbel.<game>`, all lowercase, with `-` replaced by `_`. Not
-`io.github.…` and not a per-game domain: no domain is owned either way, and
-one prefix is at least consistent and unique enough. IDs already published
+`org.<vendor>.<game>`, all lowercase, with `-` replaced by `_`. `<vendor>` is
+a name the author or group picks once and uses for all their games, e.g.
+`org.grumbel.kurvenrausch`. Not `io.github.…` and not a per-game domain:
+domain ownership is not checked outside Flathub and Google Play, and one
+prefix is at least consistent and unique enough. IDs already published
 (Pingus: `org.pingus.game`, Flathub `org.seul.pingus`) stay unchanged;
 changing an ID makes it a different app and existing installs lose updates
 and their saves.
