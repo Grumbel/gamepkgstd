@@ -35,8 +35,9 @@ release/CI checklists, accessibility.
 - kurvenrausch: no 48x48 hicolor icon (INT-6), no adaptive Android icon
   (INT-14), `.rc` has no `VERSIONINFO` (INT-11), flake has no `checks`
   (FLAKE-9).
-- dualthrust, kugelmatch, pingus: `.desktop` file not named `<app-id>.desktop`
-  (INT-1); dualthrust and kugelmatch have no `checks` (FLAKE-9).
+- kurvenrausch, kugelmatch: reverse-DNS IDs on Linux
+  (`io.github.grumbel.kurvenrausch.desktop`, `org.kugelmatch.KugelMatch`
+  metainfo); INT-1 says plain `<game>`. dualthrust and kugelmatch have no `checks` (FLAKE-9).
 - pingus: `checks = packages // appChecks` already matches FLAKE-9/10; extra
   checks of FLAKE-11 missing.
 

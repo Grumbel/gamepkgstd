@@ -1,7 +1,7 @@
 # Directories
 
-`<game>` is the lowercase game name. `<app-id>` is the reverse-DNS ID, e.g.
-`io.github.grumbel.kurvenrausch`.
+`<game>` is the lowercase game name, the same as the executable, e.g.
+`kurvenrausch`.
 
 ## Install layout
 
@@ -10,9 +10,9 @@
 ```
 bin/<game>
 share/<game>/                                   game data
-share/applications/<app-id>.desktop
-share/metainfo/<app-id>.metainfo.xml
-share/icons/hicolor/<size>x<size>/apps/<app-id>.png   (and/or scalable/…/.svg)
+share/applications/<game>.desktop
+share/metainfo/<game>.metainfo.xml
+share/icons/hicolor/<size>x<size>/apps/<game>.png   (and/or scalable/…/.svg)
 share/man/man6/<game>.6
 ```
 

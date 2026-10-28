@@ -6,29 +6,35 @@ to forget and only show up once installed, so they are checked by
 
 ## Identity
 
-**INT-1.** The app ID is reverse-DNS under a domain the project controls,
-normally `io.github.<user>.<game>`. It is used unchanged as:
+**INT-1.** The app ID is the executable name, `<game>`. No reverse-DNS IDs on
+Linux. It is used unchanged as:
 
 | Where | Value |
 |-------|-------|
-| `.desktop` file name | `<app-id>.desktop` |
-| `Icon=` and icon file names | `<app-id>` |
-| AppStream `<id>`, metainfo file name | `<app-id>`, `<app-id>.metainfo.xml` |
-| X11 `WM_CLASS`, Wayland `app_id`, `StartupWMClass=` | `<app-id>` |
-| Android `applicationId` | `<app-id>`, with `-` replaced by `_` |
+| `.desktop` file name | `<game>.desktop` |
+| `Icon=` and icon file names | `<game>` |
+| AppStream `<id>`, metainfo file name | `<game>`, `<game>.metainfo.xml` |
+| X11 `WM_CLASS`, Wayland `app_id`, `StartupWMClass=` | `<game>` |
 
-Changing it later breaks Android updates and desktop pinning; pick it once.
+`appstreamcli validate` may report `cid-desktopapp-is-not-rdns`. This is
+expected and is not a reason to change the ID.
+
+Android is the exception: `applicationId` must contain a dot, so it
+is `io.github.<user>.<game>` (with `-` replaced by `_`). Changing it later
+breaks updates; pick it once.
 
 **INT-2.** The display name (`Name=`, window title, Android label, PortMaster
 title, `<title>` of the web page) is the same everywhere, e.g. `Kurvenrausch`.
 
 **INT-3.** Before creating the window, set the IDs SDL2 uses for window
-matching; without this, Wayland and X11 show a generic icon and the dock does
-not group the window with its launcher:
+matching. Do not rely on SDL's default (the executable name): Nix's
+`makeWrapper` renames the real binary to `.<game>-wrapped`, and then
+Wayland and X11 show a generic icon and the dock does not group the window
+with its launcher:
 
 ```cpp
-SDL_SetHint(SDL_HINT_VIDEO_X11_WMCLASS, "<app-id>");
-SDL_SetHint(SDL_HINT_VIDEO_WAYLAND_WMCLASS, "<app-id>");
+SDL_SetHint(SDL_HINT_VIDEO_X11_WMCLASS, "<game>");
+SDL_SetHint(SDL_HINT_VIDEO_WAYLAND_WMCLASS, "<game>");
 SDL_SetHint(SDL_HINT_APP_NAME, "<Name>");
 ```
 
@@ -46,10 +52,10 @@ scaled up by whole multiples with nearest neighbour.
 **INT-6.** Installed files (DIR-1):
 
 ```
-share/applications/<app-id>.desktop
-share/metainfo/<app-id>.metainfo.xml
-share/icons/hicolor/{16x16,32x32,48x48,64x64,128x128,256x256}/apps/<app-id>.png
-share/icons/hicolor/scalable/apps/<app-id>.svg      (if an SVG exists)
+share/applications/<game>.desktop
+share/metainfo/<game>.metainfo.xml
+share/icons/hicolor/{16x16,32x32,48x48,64x64,128x128,256x256}/apps/<game>.png
+share/icons/hicolor/scalable/apps/<game>.svg      (if an SVG exists)
 ```
 
 48×48 is required: it is the hicolor fallback size.
@@ -63,17 +69,17 @@ Name=Kurvenrausch
 GenericName=Racing Game
 Comment=One line describing the game
 Exec=<game>
-Icon=<app-id>
+Icon=<game>
 Terminal=false
 Categories=Game;ArcadeGame;
 Keywords=racing;arcade;
-StartupWMClass=<app-id>
+StartupWMClass=<game>
 SingleMainWindow=true
 ```
 
 - `Exec=` is the bare command name, no path, no `%f`/`%u` unless the game
   opens files given on the command line.
-- `Icon=` is the bare app ID, no path, no extension.
+- `Icon=` is the bare `<game>`, no path, no extension.
 - `Categories=` contains `Game` plus one or more of the freedesktop game
   subcategories (`ActionGame`, `ArcadeGame`, `PuzzleGame`, `StrategyGame`, …).
 
