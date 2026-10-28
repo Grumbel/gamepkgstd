@@ -20,8 +20,12 @@ Linux. It is used unchanged as:
 expected and is not a reason to change the ID.
 
 Where a dotted ID is required (Android `applicationId`), use
-`org.grumbel.<game>`, with `-` replaced by `_`. Never `io.github.…`. Changing
-it later breaks Android updates; pick it once.
+`org.grumbel.<game>`, all lowercase, with `-` replaced by `_`. Not
+`io.github.…` and not a per-game domain: no domain is owned either way, and
+one prefix is at least consistent and unique enough. IDs already published
+(Pingus: `org.pingus.game`, Flathub `org.seul.pingus`) stay unchanged;
+changing an ID makes it a different app and existing installs lose updates
+and their saves.
 
 **INT-2.** The display name (`Name=`, window title, Android label, PortMaster
 title, `<title>` of the web page) is the same everywhere, e.g. `Kurvenrausch`.
