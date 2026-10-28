@@ -37,7 +37,9 @@ release/CI checklists, accessibility.
   (FLAKE-9).
 - kurvenrausch, kugelmatch: reverse-DNS IDs on Linux
   (`io.github.grumbel.kurvenrausch.desktop`, `org.kugelmatch.KugelMatch`
-  metainfo); INT-1 says plain `<game>`. dualthrust and kugelmatch have no `checks` (FLAKE-9).
+  metainfo); INT-1 says plain `<game>`. kurvenrausch's Android package is
+  `io.github.grumbel.kurvenrausch`; INT-1 says `org.grumbel.kurvenrausch`
+  (changing it makes a new app on devices, old installs are not updated). dualthrust and kugelmatch have no `checks` (FLAKE-9).
 - pingus: `checks = packages // appChecks` already matches FLAKE-9/10; extra
   checks of FLAKE-11 missing.
 

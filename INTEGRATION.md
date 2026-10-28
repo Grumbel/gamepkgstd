@@ -19,9 +19,9 @@ Linux. It is used unchanged as:
 `appstreamcli validate` may report `cid-desktopapp-is-not-rdns`. This is
 expected and is not a reason to change the ID.
 
-Android is the exception: `applicationId` must contain a dot, so it
-is `io.github.<user>.<game>` (with `-` replaced by `_`). Changing it later
-breaks updates; pick it once.
+Where a dotted ID is required (Android `applicationId`), use
+`org.grumbel.<game>`, with `-` replaced by `_`. Never `io.github.…`. Changing
+it later breaks Android updates; pick it once.
 
 **INT-2.** The display name (`Name=`, window title, Android label, PortMaster
 title, `<title>` of the web page) is the same everywhere, e.g. `Kurvenrausch`.
