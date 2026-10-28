@@ -40,20 +40,69 @@ silently builds for the host.
 | `<game>-wasm` | Serve `<game>-wasm` on localhost and open the browser |
 | `install-android-<game>` | `adb install` the APK |
 
-## Dev shell and checks
+## Dev shell
 
 **FLAKE-6.** `devShells.default` is the development shell described in
 [DEVELOPMENT.md](DEVELOPMENT.md).
 
-**FLAKE-7.** Tests go in `checks.<system>.<name>`. `nix flake check` must pass
-on `x86_64-linux`.
-
 ## Packaging
 
-**FLAKE-8.** The native package is built with `CMAKE_BUILD_TYPE=RelWithDebInfo`
-and passes `-DPROJECT_VERSION_FULL=${version}` ([VERSIONING.md](VERSIONING.md)).
+**FLAKE-7.** The native package is built with `CMAKE_BUILD_TYPE=RelWithDebInfo`,
+passes `-DPROJECT_VERSION_FULL=${version}` ([VERSIONING.md](VERSIONING.md)) and
+sets `doCheck = true`, so `nix build` runs the CTest unit tests. Nixpkgs skips
+`checkPhase` automatically for cross builds.
 
-**FLAKE-9.** `meta.mainProgram = "<game>"` and `meta.license` are set.
+**FLAKE-8.** `meta.mainProgram = "<game>"` and `meta.license` are set.
 
-**FLAKE-10.** CI (GitHub Actions) only runs `nix build`/`nix flake check` on
-named outputs. No build logic in workflow YAML or separate shell scripts.
+## Checks
+
+`nix flake check` evaluates every output for every system, but only builds
+`checks.<current system>`. Packages that are not in `checks` are not built.
+
+**FLAKE-9.** `nix flake check` builds every package. `checks` is the package
+set plus the extra checks below:
+
+```nix
+checks = packages // appChecks // {
+  version = …;
+  integration = …;
+  …
+};
+```
+
+Reason: a broken Windows, Android or web build otherwise goes unnoticed until
+release. Nix caches each output, so a re-run only rebuilds what changed. For a
+quick edit-compile-test loop use `<game>-build` and `ctest` in `nix develop`,
+not `nix flake check`.
+
+**FLAKE-10.** Every app has an `app-<name>` check that its `program` exists
+(apps cannot be in `checks` directly because their names collide with
+packages).
+
+**FLAKE-11.** Extra checks, one small derivation each, so a failure names what
+broke:
+
+| Check | Verifies |
+|-------|----------|
+| `version` | `<game> --version` prints `<game> ${version}` (OPT-2, VER-3) |
+| `help` | `<game> --help` exits 0 |
+| `layout` | The installed native package has every file of DIR-1 and INT-6 |
+| `integration` | `desktop-file-validate` on the `.desktop` file, `appstreamcli validate --no-net` on the metainfo |
+| `man` | `mandoc -T lint` on the man page |
+| `reuse` | `reuse lint` |
+| `wasm-layout` | `<game>-wasm` has `index.html`, `<game>.js`, `<game>.wasm` and its icon (WEB-5, INT-16) |
+| `windows-icon` | The `.exe` contains an icon and `VERSIONINFO` resource (INT-10, INT-11), e.g. with `wrestool` |
+
+**FLAKE-12.** Checks need no network, display, GPU, audio device or game
+controller. A check that has to start the game sets
+`SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy`. Tests that need real hardware
+are not checks; they are listed in the README.
+
+**FLAKE-13.** An output that needs input files that cannot be in the store
+without user action (e.g. `requireFile` for original game data) is left out of
+`checks`; the README says how to build it.
+
+## CI
+
+**FLAKE-14.** CI (GitHub Actions) runs `nix flake check` on `x86_64-linux` and
+nothing else. No build logic in workflow YAML or separate shell scripts.

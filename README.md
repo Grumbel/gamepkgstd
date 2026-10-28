@@ -8,8 +8,9 @@ same everywhere.
 
 | File | Covers |
 |------|--------|
-| [FLAKE.md](FLAKE.md) | `flake.nix` output names: packages, apps, dev shell |
+| [FLAKE.md](FLAKE.md) | `flake.nix` output names, what `nix flake check` builds and tests |
 | [DIRECTORIES.md](DIRECTORIES.md) | Install layout; config, savegame, cache locations per platform |
+| [INTEGRATION.md](INTEGRATION.md) | App ID, `.desktop`, AppStream, icons on Linux, Windows, Android, PortMaster, web |
 | [SHORTCUTS.md](SHORTCUTS.md) | Keyboard and gamepad shortcuts every game provides |
 | [OPTIONS.md](OPTIONS.md) | Shared settings and command line options |
 | [VERSIONING.md](VERSIONING.md) | `VERSION` file, dev/release version strings, CMake and Nix |

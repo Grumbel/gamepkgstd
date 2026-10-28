@@ -14,8 +14,8 @@
 
 Only: flake output names, install/user directories, shortcuts, shared
 settings/options, versioning, `nix develop`, language/libraries, Emscripten.
-Deliberately out of scope now: desktop-integration details beyond install
-paths, Android lifecycle, mods/add-on manifests, save-state overlay menus,
+INTEGRATION.md (launchers, icons, app ID) was added back on request.
+Deliberately out of scope now: Android lifecycle, mods/add-on manifests, save-state overlay menus,
 release/CI checklists, accessibility.
 
 ## Known deviations in reference games (found while writing the rules)
@@ -32,9 +32,20 @@ release/CI checklists, accessibility.
 - pingus: `wasm-sdl2`, `android-sdl-libs` (FLAKE-2 wants `sdl2-wasm`,
   `sdl2-android`); Windows zip has no top-level directory (FLAKE-3).
 
+- kurvenrausch: no 48x48 hicolor icon (INT-6), no adaptive Android icon
+  (INT-14), `.rc` has no `VERSIONINFO` (INT-11), flake has no `checks`
+  (FLAKE-9).
+- dualthrust, kugelmatch, pingus: `.desktop` file not named `<app-id>.desktop`
+  (INT-1); dualthrust and kugelmatch have no `checks` (FLAKE-9).
+- pingus: `checks = packages // appChecks` already matches FLAKE-9/10; extra
+  checks of FLAKE-11 missing.
+
 ## Open questions
 
 - OPT-5 config key names and OPT-7 `.bad` handling are new conventions; no
   game implements them yet. Confirm before mass-applying.
+- FLAKE-9 makes `nix flake check` build every target (slow first run,
+  cached afterwards). Alternative would be native + tests only, with a
+  separate aggregate for all targets.
 - DIR-5 Windows/Android `config`/`state` subdirectories are new; existing
   games may need DIR-15 migration.

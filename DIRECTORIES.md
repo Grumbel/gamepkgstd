@@ -16,7 +16,7 @@ share/icons/hicolor/<size>x<size>/apps/<app-id>.png   (and/or scalable/…/.svg)
 share/man/man6/<game>.6
 ```
 
-Games use man section 6, not 1.
+Games use man section 6, not 1. Icon sizes and file contents: INTEGRATION.md.
 
 **DIR-2.** Windows zip: `<game>.exe`, its DLLs and a `data/` directory side by
 side in the top-level directory (FLAKE-3).

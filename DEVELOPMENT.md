@@ -28,7 +28,7 @@ starts with `set -euo pipefail` and exits with an error if `<GAME>_SOURCE` is
 unset ("enter the shell with: nix develop").
 
 **DEV-4.** The build type is `Debug` (override with `CMAKE_BUILD_TYPE`). The
-package build stays `RelWithDebInfo` (FLAKE-8).
+package build stays `RelWithDebInfo` (FLAKE-7).
 
 **DEV-5.** `<game>-build` reconfigures when `CMAKE_HOME_DIRECTORY` in
 `CMakeCache.txt` differs from `<GAME>_SOURCE` or no longer exists, so moving
