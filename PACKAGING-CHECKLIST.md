@@ -164,7 +164,7 @@ Run the installed artifact from a working directory outside the source and build
 
 - [ ] Installed assets, user data, configuration, persistent state, cache, temporary files, and runtime files have distinct documented purposes.
 - [ ] CLI path options use the consistent vocabulary in `DESIGN.md`; deprecated aliases, if retained, are tested and documented.
-- [ ] Linux desktop paths follow XDG base-directory rules; Windows uses appropriate known folders; Android and web use their platform storage models.
+- [ ] Each category's location matches `DIRECTORIES.md`: Linux desktop paths follow XDG base-directory rules (savegames in `XDG_STATE_HOME`); Windows keeps config and savegames in Roaming AppData and only machine-bound data in Local; Android and web use their platform storage models.
 - [ ] Portable mode has explicit detection/activation rules, keeps writable files in its documented location, and does not silently fall back to writing elsewhere.
 - [ ] Handheld launchers' supplied paths and environment variables are respected.
 - [ ] Relative-path resolution is deterministic and documented; it does not accidentally depend on the caller's working directory.

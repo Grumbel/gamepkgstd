@@ -4,12 +4,13 @@
 
 - Base commit: `21382b841669253dac16c4a6d584384df46534a6`
 - Current goal: maintain a generic, LLM-actionable contract for cross-platform packaging/runtime behavior and a separate evidence-based compliance gate.
-- Latest completed change: man pages are required for every installed user-facing executable, including GUI applications and games, with appropriate sections, package installation, and cross-platform documentation handling; see the latest commit and `DESIGN.md`.
+- Latest completed change: directory locations moved from `DESIGN.md` section 4 into `DIRECTORIES.md`, with a per-platform matrix and rationale. Windows savegames now go to Roaming AppData (was Local); savegames on Linux stay in `XDG_STATE_HOME` (not `XDG_DATA_HOME`, which in practice fills with installed `/usr/share`-like data).
 - Deliver a cumulative git bundle from the original base commit, following `AGENTS.md`.
 
 ## Current document roles
 
 - `DESIGN.md`: normative generic contract and platform implementation guidance.
+- `DIRECTORIES.md`: path categories, per-platform locations, and the reasoning for them.
 - `GAME-DESIGN.md`: optional game-specific behavior.
 - `PACKAGING-CHECKLIST.md`: sole compliance/release checklist.
 - `LLM-IMPLEMENTATION-GUIDE.md`: inspect-plan-implement-verify-report workflow for coding agents.
@@ -18,6 +19,7 @@
 
 ## Remaining follow-up ideas
 
+- `DIRECTORIES.md`: verify the Android/web columns and the Pictures-folder screenshot rule against the reference projects (MOAS currently writes screenshots to its state directory).
 - Validate the OS integration and man-page guidance against actual Linux package formats, Android APK/AAB packaging, and Windows portable/installer outputs; distinguish static metadata checks from UI launch tests.
 
 - Validate the conventions against current reference-project implementations and link to concrete examples.

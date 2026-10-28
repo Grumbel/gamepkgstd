@@ -8,6 +8,7 @@ Related documents:
 
 - `VERSION-HANDLING.md` — version source and propagation.
 - `NIX-DEVELOP-SHELL.md` — reusable out-of-tree CMake development workflow.
+- `DIRECTORIES.md` — path categories and their locations on each platform.
 - `PACKAGING-CHECKLIST.md` — sole compliance and release gate.
 - `LLM-IMPLEMENTATION-GUIDE.md` — procedure for applying this contract to an existing repository.
 - `GAME-DESIGN.md` — optional game-specific UI/input guidance.
@@ -207,21 +208,7 @@ Use the project's chosen license consistently, preserve third-party license noti
 
 Keep the *kind of data* separate from the *physical directory used on a platform*. A platform may place several kinds in one writable root, but code and options must retain the distinction. Never infer a writable location from the current working directory.
 
-### Path categories
-
-| Category | Contents | Desktop Linux / Unix default | Writable? |
-|---|---|---|---|
-| Installed assets | Shipped resources, templates, models, images, audio, shaders, built-in content | Install prefix, commonly `share/<app>` | No |
-| User data | User-installed mods/add-ons and content the user explicitly imports | `$XDG_DATA_HOME/<app>`; default `~/.local/share/<app>` | Yes |
-| Config | Preferences, application settings, key bindings, UI settings | `$XDG_CONFIG_HOME/<app>`; default `~/.config/<app>` | Yes |
-| State | Saved documents, progress, history, and other durable user state | `$XDG_STATE_HOME/<app>`; default `~/.local/state/<app>` | Yes |
-| Cache | Re-creatable downloads, shader caches, thumbnails | `$XDG_CACHE_HOME/<app>`; default `~/.cache/<app>` | Yes |
-| Temporary files | Incomplete downloads, extraction staging, disposable scratch output | OS temporary-directory API, with a private per-app subdirectory if needed | Yes, ephemeral |
-| Runtime files | Locks, sockets, other short-lived coordination files | `$XDG_RUNTIME_DIR/<app>` when valid and available | Yes, ephemeral |
-
-`XDG_DATA_HOME`, `XDG_CONFIG_HOME`, `XDG_STATE_HOME`, and `XDG_CACHE_HOME` are *base directories*, not the application's final directory. Append the application-specific directory exactly once. Honor an XDG variable only when it is set to an absolute path; otherwise use the specification's default. Do not treat `XDG_RUNTIME_DIR` as a general temp directory: it is optional, user-owned, private, and intended for runtime objects. Validate its ownership and permissions before using it. Use the platform's temporary-directory API for scratch files.
-
-The XDG Base Directory Specification is a desktop Unix convention, not a universal path API. Do not impose XDG semantics on Windows, Android, web builds, or a handheld port merely because the code uses a cross-platform framework.
+The path categories (installed assets, config, state, user data, cache, temporary files, runtime files, user documents) and their locations on Linux/XDG, Windows, portable builds, handheld launchers, Android, and the web are defined in [`DIRECTORIES.md`](DIRECTORIES.md), together with the reasoning behind non-obvious choices such as savegames in `XDG_STATE_HOME` and Roaming AppData. This section covers the options, resolution order, and correctness rules that apply to every category.
 
 ### One consistent path-option vocabulary
 
@@ -247,48 +234,6 @@ Path resolution order for each independently overridable category is:
 4. Native platform default.
 
 Do not combine these sources ad hoc. `--config-dir` must not relocate persistent state, extensions, cache, or temp files. A portable root may intentionally group categories below one root, but they should still use separate subdirectories. `--show-paths` should report the resolved location and whether it came from CLI, environment, portable mode, or a platform default.
-
-### Linux and Unix desktop: XDG
-
-For a normal installed desktop build, use the XDG paths in the category table above. Shipped assets are found through the install layout or an explicit `--data-dir`; they do not belong in a writable XDG directory. Do not write into the install prefix or current working directory by default.
-
-Use the home directory only to construct the documented fallback when the relevant XDG variable is unset or invalid. If neither a valid base directory nor a usable home directory can be resolved, report the problem rather than falling back to a relative path. Create application subdirectories as needed and report actionable errors when they cannot be created.
-
-### Windows
-
-For an installed build, use Windows known-folder APIs (or a library abstraction that maps to them) rather than assuming Unix home paths:
-
-- Config: Roaming AppData, typically `%APPDATA%/<Vendor>/<App>`.
-- State and user data: Local AppData by default, typically `%LOCALAPPDATA%/<Vendor>/<App>`; use Roaming AppData only when roaming is actually desired.
-- Cache and temporary files: Local AppData cache subdirectory and the OS temporary-directory API, respectively.
-- Installed assets: the package's installed data directory, resolved relative to the executable or through an installed-resource lookup.
-
-SDL path helpers may be used where their behavior matches the intended category, but do not use one generic preference path for every kind of data. Do not write beside the executable in an ordinary installation.
-
-### Portable builds and removable installations
-
-Portable mode is an explicit distribution or launch profile, not a guess based only on the executable's location. Enable it through a documented marker file, launcher setting, or `--portable` option. The package must state which mechanism is authoritative.
-
-- Keep the shipped application and assets separate from writable user data.
-- Put writable files below a documented directory such as `userdata/config`, `userdata/state`, `userdata/data`, `userdata/cache`, and `userdata/tmp` beside the portable package, or under a launcher-supplied writable root.
-- Never assume the executable directory is writable. If portable storage is read-only or full, explain the failure and offer the native user-directory mode where possible; do not silently start writing elsewhere.
-- Portable mode must not unexpectedly import or modify the installed version's normal user profile. Make profile selection visible in diagnostics.
-- Preserve paths containing spaces and non-ASCII characters. Do not build paths by shell-concatenating untrusted strings.
-
-### R36S / PortMaster / ArkOS and similar handheld ports
-
-Treat these as a distinct *portable launcher profile*, even though the underlying system may be Linux. Follow the platform's current launcher contract rather than applying desktop XDG rules blindly.
-
-- Prefer a documented launcher-provided path override for writable files. Use a project-specific variable or a shared `APP_*_DIR` convention, and define whether it names a base root or a final category directory.
-- If the PortMaster contract supplies a final `conf/` directory through a variable such as `XDG_CONFIG_HOME` or a launcher-specific variable, do not append another application directory to it. This exception must be explicit in the port integration, not inferred globally from a path merely ending in `conf`.
-- Keep save data and user content in the launcher/platform's expected writable location; do not assume the binary's directory is writable or that the current working directory is stable.
-- Document the actual layout, environment overrides, and migration behavior in the port README and launcher script.
-- Keep the runtime library environment intentional. Do not let a host `LD_LIBRARY_PATH` accidentally select incompatible SDL, GLES, or other shared libraries; clear or set it in the launcher only when required by the target runtime.
-
-### Android and web
-
-- **Android:** use the app's sandboxed internal storage APIs for writable config/state/cache, and platform-approved external storage only when the feature and permissions require it. Treat APK assets as read-only virtual assets; do not assume `$HOME`, a normal executable-relative `data/` directory, or unrestricted `/sdcard` access. Persist durable progress incrementally and use platform instance-state mechanisms for transient UI/session restoration. Never depend on receiving a last-chance lifecycle callback before the OS kills the process.
-- **Emscripten/web:** use the virtual filesystem and a documented mount for persistent data. Distinguish in-memory temporary files from persisted storage, and flush asynchronous persistence (for example IndexedDB-backed storage) according to the runtime's API. Do not promise persistence until the flush completes.
 
 ### Asset lookup and virtual assets
 

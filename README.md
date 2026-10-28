@@ -7,6 +7,7 @@ Reusable rules for packaging, paths, CLI, configuration, cross-compilation, OS d
 | File | Purpose |
 |------|---------|
 | **DESIGN.md** | Generic build, path, CLI, configuration, OS integration, extension, packaging, and Nix-first CI contract |
+| **DIRECTORIES.md** | Path categories (config, state/savegames, user data, cache, …) and where they live on Linux, Windows, Android, web, portable and handheld targets, with rationale |
 | **VERSION-HANDLING.md** | Rules for the top-level `VERSION` file, CMake and Nix |
 | **NIX-DEVELOP-SHELL.md** | Reusable `nix develop` out-of-tree CMake pattern |
 | **PACKAGING-CHECKLIST.md** | Sole compliance and release gate for native/cross builds, runtime smoke tests, OS integration, extensions, CI, and target artifacts |
