@@ -1,29 +1,53 @@
-# Cross-Platform Packaging Design Notes
+# gamepkgstd — packaging and runtime standard for games
 
-Reusable rules for packaging, paths, CLI, configuration, cross-compilation, OS desktop/mobile integration, extensions, versioning, and deployment across applications, games, libraries, command-line tools, and web projects. The initial examples came from several games, but the core contract is generic.
+A short set of rules that every game in this family follows, so that builds,
+install layout, savegame locations, shortcuts and command line options are the
+same everywhere.
 
-## Contents
+## Files
 
-| File | Purpose |
-|------|---------|
-| **DESIGN.md** | Generic build, path, CLI, configuration, OS integration, extension, packaging, and Nix-first CI contract |
-| **DIRECTORIES.md** | Path categories (config, state/savegames, user data, cache, …) and where they live on Linux, Windows, Android, web, portable and handheld targets, with rationale |
-| **VERSION-HANDLING.md** | Rules for the top-level `VERSION` file, CMake and Nix |
-| **NIX-DEVELOP-SHELL.md** | Reusable `nix develop` out-of-tree CMake pattern |
-| **PACKAGING-CHECKLIST.md** | Sole compliance and release gate for native/cross builds, runtime smoke tests, OS integration, extensions, CI, and target artifacts |
-| **LLM-IMPLEMENTATION-GUIDE.md** | Agent workflow for inspecting, fixing, testing, and reporting project compliance |
-| **GAME-DESIGN.md** | Optional game-specific shortcuts, controller, menu, and graphics guidance |
-| **AGENTS.md** | Session continuity, git-bundle delivery rules for agents |
+| File | Covers |
+|------|--------|
+| [FLAKE.md](FLAKE.md) | `flake.nix` output names: packages, apps, dev shell |
+| [DIRECTORIES.md](DIRECTORIES.md) | Install layout; config, savegame, cache locations per platform |
+| [SHORTCUTS.md](SHORTCUTS.md) | Keyboard and gamepad shortcuts every game provides |
+| [OPTIONS.md](OPTIONS.md) | Shared settings and command line options |
+| [VERSIONING.md](VERSIONING.md) | `VERSION` file, dev/release version strings, CMake and Nix |
+| [DEVELOPMENT.md](DEVELOPMENT.md) | Running and debugging through `nix develop` |
+| [STACK.md](STACK.md) | Language, libraries and APIs |
+| [EMSCRIPTEN.md](EMSCRIPTEN.md) | WebAssembly builds: main loop, Asyncify, persistent storage |
 
-## Source projects
+## Rule format
 
-- https://github.com/Pingus/pingus
-- https://github.com/Grumbel/kurvenrausch
-- https://github.com/Grumbel/dualthrust
-- https://github.com/Grumbel/kugelmatch
-- https://github.com/SuperTux/supertux (and Milestone 1)
+- Every rule has an ID (`DIR-3`). Cite IDs in audits, commits and code comments.
+- Rules are mandatory. "Should" marks a default that a game may deviate from
+  if it documents why in its README.
+- A rule that does not apply to a game (e.g. no Android port) is skipped, not
+  worked around.
 
+## Auditing a game
 
-## How to use these notes
+To check a game against this standard (by hand or with an AI agent):
 
-Treat `DESIGN.md` as the generic engineering contract and `GAME-DESIGN.md` as optional game-specific guidance. When asking an LLM to modify a project, also provide `LLM-IMPLEMENTATION-GUIDE.md` and use `PACKAGING-CHECKLIST.md` as the evidence-backed gap report and release gate. `flake.nix` is the single source of truth for builds, tests, cross-compilation, packaging, and deployment; GitHub Actions is only a thin invocation shim. The default goal is a documented one-command build for every required artifact, plus a deployment command where applicable. Use `PACKAGING-CHECKLIST.md` as a release gate and mark unsupported targets N/A with a reason. Project-specific deviations should be documented rather than hidden in build scripts or workflow YAML.
+1. Read every file listed above.
+2. Determine which targets the game builds (from its `flake.nix`).
+3. For each rule that applies, find the code or build file that implements it.
+   Record **pass**, **fail** (with file and line), or **unknown** (could not
+   tell without running it). Do not mark something as passing because it
+   compiles.
+4. Fix failures in small, separate commits. Path changes are data migrations:
+   keep reading the old location (DIR-15).
+5. Report the result as a table of rule ID, status and evidence.
+
+Example prompt:
+
+> Audit this game against /path/to/gamepkgstd (start with README.md). Produce
+> the rule table, then fix the failures one commit per rule.
+
+## Reference games
+
+[Pingus](https://github.com/Pingus/pingus),
+[Kurvenrausch](https://github.com/Grumbel/kurvenrausch),
+[dualthrust](https://github.com/Grumbel/dualthrust),
+[KugelMatch](https://github.com/Grumbel/kugelmatch),
+[SuperTux](https://github.com/SuperTux/supertux).
