@@ -14,6 +14,7 @@ same everywhere.
 | [SHORTCUTS.md](SHORTCUTS.md) | Keyboard and gamepad shortcuts every game provides |
 | [OPTIONS.md](OPTIONS.md) | Shared settings and command line options |
 | [VERSIONING.md](VERSIONING.md) | `VERSION` file, dev/release version strings, CMake and Nix |
+| [LOGGING.md](LOGGING.md) | Startup report: versions, libraries, video / OpenGL, audio, input, fallbacks |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Running and debugging through `nix develop` |
 | [STACK.md](STACK.md) | Language, libraries and APIs |
 | [EMSCRIPTEN.md](EMSCRIPTEN.md) | WebAssembly builds: main loop, Asyncify, persistent storage |

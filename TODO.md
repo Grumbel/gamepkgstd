@@ -15,6 +15,9 @@
 Only: flake output names, install/user directories, shortcuts, shared
 settings/options, versioning, `nix develop`, language/libraries, Emscripten.
 INTEGRATION.md (launchers, icons, app ID) was added back on request.
+LOGGING.md (startup report: runtime versions, renderer / OpenGL, audio,
+input, fallbacks) was added on request (2026-10-29), after xanatoo's R36S
+log revealed the device's SDL version; reference games not audited yet.
 Deliberately out of scope now: Android lifecycle, mods/add-on manifests, save-state overlay menus,
 release/CI checklists, accessibility.
 
