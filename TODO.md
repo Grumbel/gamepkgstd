@@ -45,6 +45,13 @@ release/CI checklists, accessibility.
 - pingus: `checks = packages // appChecks` already matches FLAKE-9/10; extra
   checks of FLAKE-11 missing.
 
+## R36S.md (2026-10-29)
+
+- Added from the xanatoo R36S build: C++20 against libstdc++ 9 works for
+  language features (no newer headers), SQLite via eoan debs + `libs/`,
+  no libvips. The C++20 xanatoo build runs on the device.
+- STACK-1 says C++17 or newer; ARK-6 bounds what C++20 an R36S game can use.
+
 ## Open questions
 
 - OPT-5 config key names and OPT-7 `.bad` handling are new conventions; no

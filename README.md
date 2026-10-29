@@ -17,6 +17,7 @@ same everywhere.
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Running and debugging through `nix develop` |
 | [STACK.md](STACK.md) | Language, libraries and APIs |
 | [EMSCRIPTEN.md](EMSCRIPTEN.md) | WebAssembly builds: main loop, Asyncify, persistent storage |
+| [R36S.md](R36S.md) | R36S / ArkOS cross builds: eoan sysroot, C++20 and libraries that work |
 
 ## Rule format
 
