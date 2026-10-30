@@ -21,6 +21,14 @@ log revealed the device's SDL version; reference games not audited yet.
 Deliberately out of scope now: Android lifecycle, mods/add-on manifests, save-state overlay menus,
 release/CI checklists, accessibility.
 
+## SDL3 (2026-10-30)
+
+SDL3.md added and STACK-2 relaxed after sdl-jstest built SDL3 for every
+target (R36S ARK-8, Android, Windows, web). ARK-7 now warns against
+preloading SDL2 into sdl12-compat programs. Open: SDL3 audio on the R36S
+(ALSA was off in sdl-jstest), button input of an SDL3 build on the R36S,
+a gamepad in the browser with SDL3. No game has been converted yet.
+
 ## Known deviations in reference games (found while writing the rules)
 
 - kurvenrausch `src/state.cpp`: detects PortMaster from `conf`/`/ports/` path

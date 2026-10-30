@@ -19,7 +19,7 @@
 | `<game>-r36s-portmaster-zip` | The same, zipped |
 
 **FLAKE-2.** Dependencies built for a target are named `<library>-<target>`:
-`sdl2-wasm`, `sdl2-android`. Sysroots are `<distro>-sysroot`:
+`sdl2-wasm`, `sdl2-android`, `sdl3-r36s`. Sysroots are `<distro>-sysroot`:
 `arkos-sysroot`.
 
 **FLAKE-3.** A zip file is named `<game>-<version>-<target>.zip` and contains a

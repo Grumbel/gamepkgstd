@@ -19,6 +19,7 @@ same everywhere.
 | [STACK.md](STACK.md) | Language, libraries and APIs |
 | [EMSCRIPTEN.md](EMSCRIPTEN.md) | WebAssembly builds: main loop, Asyncify, persistent storage |
 | [R36S.md](R36S.md) | R36S / ArkOS cross builds: eoan sysroot, C++20 and libraries that work |
+| [SDL3.md](SDL3.md) | Building SDL3 for every target, and what changes when a game moves to it |
 
 ## Rule format
 
@@ -53,4 +54,5 @@ Example prompt:
 [Kurvenrausch](https://github.com/Grumbel/kurvenrausch),
 [dualthrust](https://github.com/Grumbel/dualthrust),
 [KugelMatch](https://github.com/Grumbel/kugelmatch),
-[SuperTux](https://github.com/SuperTux/supertux).
+[SuperTux](https://github.com/SuperTux/supertux),
+[sdl-jstest](https://github.com/grumbel/sdl-jstest) (SDL 1.2, SDL2 and SDL3 on every target).

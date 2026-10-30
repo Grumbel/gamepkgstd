@@ -3,9 +3,11 @@
 **STACK-1.** C++17 or newer, set with `CMAKE_CXX_STANDARD`. Build with CMake
 and Ninja.
 
-**STACK-2.** SDL2 for window, input, audio and timing. Not SDL3: the
-R36S/PortMaster runtimes ship SDL2. SDL 1.2 only for legacy targets
-(GP2X/Wiz, OLPC XO-1); on the XO-1, plain X11 may be faster, so benchmark.
+**STACK-2.** SDL2 or SDL3 for window, input, audio and timing. SDL3 works on
+every target when the game ships it where the platform has none (R36S:
+ARK-8, Android, Windows, web: SDL3.md); new games and conversions should
+use SDL3. SDL 1.2 only for legacy targets (GP2X/Wiz, OLPC XO-1); on the
+XO-1, plain X11 may be faster, so benchmark.
 
 **STACK-3.** Rendering uses SDL_Renderer or OpenGL ES 2.0 / GLSL ES 1.00.
 That is what R36S, Android and WebGL 1 provide. Desktop OpenGL is only an
